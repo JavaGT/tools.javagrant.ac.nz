@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Information Viewer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #00d9ff;
+        }
+        .instructions {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 2rem;
+        }
+        #event-log {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            height: 500px;
+            overflow-y: auto;
+        }
+        .event-entry {
+            padding: 0.75rem;
+            border-bottom: 1px solid #0f3460;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .event-entry:last-child {
+            border-bottom: none;
+        }
+        .event-entry .type {
+            color: #00d9ff;
+            font-weight: bold;
+        }
+        .event-entry .target {
+            color: #e94560;
+        }
+        .timestamp {
+            color: #888;
+            margin-right: 1rem;
+        }
+        .clear-btn {
+            display: block;
+            margin: 1rem auto;
+            padding: 0.75rem 2rem;
+            background: #0f3460;
+            color: #00d9ff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .clear-btn:hover {
+            background: #1f4068;
+        }
+    </style>
+</head>
+<body>
+    <h1>Event Information Viewer</h1>
+    <p class="instructions">Move your mouse, click, press keys, or scroll to see events</p>
+    <button class="clear-btn" onclick="clearLog()">Clear Log</button>
+    <div id="event-log"></div>
+
+    <script>
+        const log = document.getElementById('event-log');
+        let eventCount = 0;
+
+        function logEvent(event) {
+            eventCount++;
+            const entry = document.createElement('div');
+            entry.className = 'event-entry';
+            entry.innerHTML = `
+                <span class="timestamp">${eventCount}</span>
+                <span class="type">${event.type}</span>
+                <span class="target">${event.target.tagName || event.target}</span>
+                ${event.clientX !== undefined ? `X:${event.clientX} Y:${event.clientY}` : ''}
+                ${event.key ? ` Key:${event.key}` : ''}
+                ${event.button !== undefined ? ` Button:${event.button}` : ''}
+            `;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearLog() {
+            log.innerHTML = '';
+            eventCount = 0;
+        }
+
+        // Mouse events
+        ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'].forEach(type => {
+            document.addEventListener(type, logEvent);
+        });
+
+        // Keyboard events
+        ['keydown', 'keyup', 'keypress'].forEach(type => {
+            document.addEventListener(type, logEvent);
+        });
+
+        // Touch events
+        ['touchstart', 'touchend', 'touchmove'].forEach(type => {
+            document.addEventListener(type, logEvent);
+        });
+
+        // Wheel/Scroll
+        document.addEventListener('wheel', logEvent);
+
+        // Focus events
+        ['focus', 'blur'].forEach(type => {
+            document.addEventListener(type, logEvent);
+        });
+    </script>
+</body>
+</html>

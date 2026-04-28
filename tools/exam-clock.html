@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Clock</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #time {
+            font-size: clamp(4rem, 20vw, 12rem);
+            font-weight: 200;
+            color: #00d9ff;
+            font-variant-numeric: tabular-nums;
+        }
+        #date {
+            font-size: clamp(1rem, 3vw, 2rem);
+            color: #888;
+            margin-top: 1rem;
+        }
+        #seconds {
+            color: #e94560;
+        }
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            background: #16213e;
+            color: #00d9ff;
+            border: 1px solid #0f3460;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #1f4068;
+        }
+        #tz-display {
+            margin-top: 1rem;
+            color: #666;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="time">
+        <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+    </div>
+    <div id="date">Loading...</div>
+    <div id="tz-display"></div>
+    <div class="controls">
+        <button onclick="toggleSeconds()">Toggle Seconds</button>
+        <button onclick="toggleDate()">Toggle Date</button>
+    </div>
+
+    <script>
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+        const dateEl = document.getElementById('date');
+        const tzEl = document.getElementById('tz-display');
+
+        let showSeconds = true;
+        let showDate = true;
+
+        function updateTime() {
+            const now = new Date();
+            hoursEl.textContent = String(now.getHours()).padStart(2, '0');
+            minutesEl.textContent = String(now.getMinutes()).padStart(2, '0');
+            secondsEl.textContent = String(now.getSeconds()).padStart(2, '0');
+            secondsEl.style.display = showSeconds ? 'inline' : 'none';
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateEl.textContent = now.toLocaleDateString('en-NZ', options);
+            dateEl.style.display = showDate ? 'block' : 'none';
+
+            tzEl.textContent = now.toLocaleTimeString('en-NZ', { timeZoneName: 'short' }).split(' ').slice(2).join(' ');
+        }
+
+        function toggleSeconds() {
+            showSeconds = !showSeconds;
+        }
+
+        function toggleDate() {
+            showDate = !showDate;
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
