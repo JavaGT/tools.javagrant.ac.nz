@@ -7,29 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'media',
             theme: {
                 extend: {
                     colors: {
-                        primary: '#0f0f1a',
-                        secondary: '#1a1a2e',
-                        card: '#16213e',
-                        cardhover: '#1f2b4d',
-                        cyan: '#00d9ff',
-                        pink: '#ff006e',
-                        purple: '#8b5cf6',
+                        cyan: { DEFAULT: '#0891b2', light: '#06b6d4' },
+                        pink: { DEFAULT: '#db2777', light: '#ec4899' },
+                        purple: { DEFAULT: '#7c3aed', light: '#8b5cf6' },
                     }
                 }
             }
         }
     </script>
-    <style>
-        body { background: #0f0f1a; }
-        .pulse-separator { animation: pulse 1s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    </style>
 </head>
-<body class="min-h-screen text-white font-sans antialiased flex flex-col items-center justify-center">
-    <a href="../index.html" class="absolute top-6 left-6 text-gray-400 hover:text-cyan flex items-center gap-2 text-sm no-underline transition-colors">
+<body class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased flex flex-col items-center justify-center transition-colors duration-200">
+    <a href="../index.html" class="absolute top-6 left-6 text-gray-400 dark:text-gray-500 hover:text-cyan flex items-center gap-2 text-sm no-underline transition-colors">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12 19 5 12 12 5"/>
@@ -37,19 +29,19 @@
         Back
     </a>
 
-    <div class="text-center">
-        <div id="time" class="text-9xl md:text-[12rem] font-extralight tracking-tighter leading-none tabular-nums">
-            <span id="hours">00</span><span class="text-cyan pulse-separator">:</span><span id="minutes">00</span><span id="seconds-container"><span class="text-cyan pulse-separator">:</span><span id="seconds">00</span></span>
+    <div class="text-center px-4">
+        <div id="time" class="text-8xl md:text-[10rem] font-light tracking-tight tabular-nums text-gray-900 dark:text-white">
+            <span id="hours">00</span><span class="text-cyan dark:text-cyan-light opacity-80">:</span><span id="minutes">00</span><span id="seconds-container"><span class="text-cyan dark:text-cyan-light opacity-80">:</span><span id="seconds">00</span></span>
         </div>
-        <div id="date" class="text-xl md:text-2xl text-gray-400 mt-6">Loading...</div>
-        <div id="tz-display" class="text-gray-600 mt-2 text-sm"></div>
+        <div id="date" class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mt-6">Loading...</div>
+        <div id="tz-display" class="text-gray-400 dark:text-gray-600 mt-2 text-sm"></div>
     </div>
 
     <div class="flex gap-3 mt-10">
-        <button onclick="toggleSeconds()" class="px-5 py-2.5 bg-card text-cyan border border-gray-700 rounded-lg hover:bg-cardhover hover:border-cyan transition-all text-sm font-medium">
+        <button onclick="toggleSeconds()" class="px-5 py-2.5 bg-white dark:bg-gray-900 text-cyan dark:text-cyan-light border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-all text-sm font-medium">
             Toggle Seconds
         </button>
-        <button onclick="toggleDate()" class="px-5 py-2.5 bg-card text-cyan border border-gray-700 rounded-lg hover:bg-cardhover hover:border-cyan transition-all text-sm font-medium">
+        <button onclick="toggleDate()" class="px-5 py-2.5 bg-white dark:bg-gray-900 text-cyan dark:text-cyan-light border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-all text-sm font-medium">
             Toggle Date
         </button>
     </div>

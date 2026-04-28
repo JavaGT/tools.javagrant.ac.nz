@@ -7,28 +7,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'media',
             theme: {
                 extend: {
                     colors: {
-                        primary: '#0f0f1a',
-                        secondary: '#1a1a2e',
-                        card: '#16213e',
-                        cardhover: '#1f2b4d',
-                        cyan: '#00d9ff',
-                        pink: '#ff006e',
-                        purple: '#8b5cf6',
+                        cyan: { DEFAULT: '#0891b2', light: '#06b6d4' },
+                        pink: { DEFAULT: '#db2777', light: '#ec4899' },
+                        purple: { DEFAULT: '#7c3aed', light: '#8b5cf6' },
                     }
                 }
             }
         }
     </script>
-    <style>
-        body { background: #0f0f1a; }
-    </style>
 </head>
-<body class="min-h-screen text-white font-sans antialiased">
+<body class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-200">
     <main class="max-w-4xl mx-auto px-8 py-10">
-        <a href="../index.html" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan text-sm mb-6 no-underline transition-colors">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-gray-400 dark:text-gray-500 hover:text-cyan text-sm mb-6 no-underline transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"/>
                 <polyline points="12 19 5 12 12 5"/>
@@ -47,15 +41,15 @@
             </h1>
         </header>
 
-        <div class="bg-secondary rounded-xl border border-gray-700 p-4 mb-6">
-            <p class="text-gray-400 text-sm">Move your mouse, click, press keys, or scroll to see events captured in real-time.</p>
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-6">
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Move your mouse, click, press keys, or scroll to see events captured in real-time.</p>
         </div>
 
-        <button onclick="clearLog()" class="mb-4 px-5 py-2.5 bg-card text-pink border border-pink/30 rounded-lg hover:bg-cardhover transition-all text-sm font-medium">
+        <button onclick="clearLog()" class="mb-4 px-5 py-2.5 bg-white dark:bg-gray-900 text-pink dark:text-pink-light border border-pink/30 dark:border-pink/50 rounded-lg hover:shadow-md transition-all text-sm font-medium">
             Clear Log
         </button>
 
-        <div id="event-log" class="bg-secondary rounded-xl border border-gray-700 p-4 h-[60vh] overflow-y-auto font-mono text-sm"></div>
+        <div id="event-log" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 h-[55vh] overflow-y-auto font-mono text-sm"></div>
     </main>
 
     <script>
@@ -65,22 +59,22 @@
         function logEvent(event) {
             eventCount++;
             const entry = document.createElement('div');
-            entry.className = 'flex gap-4 py-2 border-b border-gray-800 last:border-0';
+            entry.className = 'flex gap-4 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0';
 
             const timestamp = document.createElement('span');
-            timestamp.className = 'text-gray-600 min-w-[50px]';
+            timestamp.className = 'text-gray-400 dark:text-gray-600 min-w-[50px]';
             timestamp.textContent = eventCount;
 
             const type = document.createElement('span');
-            type.className = 'text-cyan font-semibold min-w-[100px]';
+            type.className = 'text-cyan dark:text-cyan-light font-semibold min-w-[100px]';
             type.textContent = event.type;
 
             const target = document.createElement('span');
-            target.className = 'text-purple';
+            target.className = 'text-purple dark:text-purple-light';
             target.textContent = event.target.tagName || 'Window';
 
             const data = document.createElement('span');
-            data.className = 'text-gray-400 flex-1';
+            data.className = 'text-gray-500 dark:text-gray-400 flex-1';
             let dataStr = '';
             if (event.clientX !== undefined) dataStr += `X:${event.clientX} Y:${event.clientY}`;
             if (event.key) dataStr += ` Key:${event.key}`;
