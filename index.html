@@ -4,83 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tools - javagrant.ac.nz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231a1a2e' width='100' height='100' rx='20'/><text y='.9em' x='50%' text-anchor='middle' font-size='70'>⚒</text></svg>">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f0f1a',
+                        secondary: '#1a1a2e',
+                        card: '#16213e',
+                        cardhover: '#1f2b4d',
+                        cyan: '#00d9ff',
+                        pink: '#ff006e',
+                        purple: '#8b5cf6',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-        h1 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: #00d9ff;
-        }
-        h2 {
-            color: #00d9ff;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-            border-bottom: 2px solid #00d9ff;
-            padding-bottom: 0.5rem;
-        }
-        .category {
-            margin-bottom: 3rem;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .tools {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-        .tool-link {
-            display: block;
-            background: #16213e;
-            color: #eee;
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: transform 0.2s, background 0.2s;
-            border: 1px solid #0f3460;
-        }
-        .tool-link:hover {
-            transform: translateY(-3px);
-            background: #1f4068;
-            border-color: #00d9ff;
-        }
-        .tool-link h3 {
-            margin-bottom: 0.5rem;
-            color: #00d9ff;
-        }
-        .tool-link p {
-            font-size: 0.9rem;
-            color: #aaa;
-        }
+        body { background: #0f0f1a; }
+        .card-hover:hover { background: #1f2b4d; border-color: #00d9ff; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0, 217, 255, 0.1); }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .stagger > * { opacity: 0; animation: fadeIn 0.4s ease forwards; }
+        .stagger > *:nth-child(1) { animation-delay: 0ms; }
+        .stagger > *:nth-child(2) { animation-delay: 100ms; }
+        .stagger > *:nth-child(3) { animation-delay: 200ms; }
     </style>
 </head>
-<body>
-    <h1>Tools</h1>
+<body class="min-h-screen text-white font-sans antialiased">
+    <main class="max-w-5xl mx-auto px-8 py-16">
+        <header class="text-center py-12 fade-in">
+            <h1 class="text-5xl font-bold flex items-center justify-center gap-4 mb-4">
+                <span class="text-cyan">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                </span>
+                Tools
+            </h1>
+            <p class="text-gray-400 text-lg">Handy utilities for everyday tasks</p>
+        </header>
 
-    <div class="category">
-        <h2>Display</h2>
-        <div class="tools">
-            <a href="tools/event-viewer.html" class="tool-link">
-                <h3>Event Information Viewer</h3>
-                <p>Displays event listener information in real-time</p>
-            </a>
-            <a href="tools/exam-clock.html" class="tool-link">
-                <h3>Exam Clock</h3>
-                <p>Large display showing current time for exams</p>
-            </a>
-        </div>
-    </div>
+        <section class="mb-12">
+            <header class="mb-6">
+                <h2 class="text-xl font-semibold text-white flex items-center gap-2 pb-4 border-b border-gray-700">
+                    <span class="text-cyan opacity-80">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </span>
+                    Display
+                </h2>
+            </header>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 stagger">
+                <a href="tools/exam-clock.html" class="flex items-center gap-5 p-6 bg-card rounded-xl border border-gray-700 card-hover transition-all duration-250 no-underline text-white">
+                    <div class="w-14 h-14 flex items-center justify-center bg-cyan/10 rounded-xl text-cyan">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-semibold mb-1">Exam Clock</h3>
+                        <p class="text-gray-400 text-sm">Large time display for exams and timed sessions</p>
+                    </div>
+                    <div class="text-cyan opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </div>
+                </a>
+                <a href="tools/event-viewer.html" class="flex items-center gap-5 p-6 bg-card rounded-xl border border-gray-700 card-hover transition-all duration-250 no-underline text-white">
+                    <div class="w-14 h-14 flex items-center justify-center bg-cyan/10 rounded-xl text-cyan">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-semibold mb-1">Event Viewer</h3>
+                        <p class="text-gray-400 text-sm">Live display of mouse, keyboard, and touch events</p>
+                    </div>
+                    <div class="text-cyan opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

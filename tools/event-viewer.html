@@ -3,82 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Information Viewer</title>
+    <title>Event Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f0f1a',
+                        secondary: '#1a1a2e',
+                        card: '#16213e',
+                        cardhover: '#1f2b4d',
+                        cyan: '#00d9ff',
+                        pink: '#ff006e',
+                        purple: '#8b5cf6',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-        h1 {
-            text-align: center;
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: #00d9ff;
-        }
-        .instructions {
-            text-align: center;
-            color: #aaa;
-            margin-bottom: 2rem;
-        }
-        #event-log {
-            background: #16213e;
-            border: 1px solid #0f3460;
-            border-radius: 8px;
-            padding: 1rem;
-            max-width: 800px;
-            margin: 0 auto;
-            height: 500px;
-            overflow-y: auto;
-        }
-        .event-entry {
-            padding: 0.75rem;
-            border-bottom: 1px solid #0f3460;
-            font-family: monospace;
-            font-size: 0.9rem;
-        }
-        .event-entry:last-child {
-            border-bottom: none;
-        }
-        .event-entry .type {
-            color: #00d9ff;
-            font-weight: bold;
-        }
-        .event-entry .target {
-            color: #e94560;
-        }
-        .timestamp {
-            color: #888;
-            margin-right: 1rem;
-        }
-        .clear-btn {
-            display: block;
-            margin: 1rem auto;
-            padding: 0.75rem 2rem;
-            background: #0f3460;
-            color: #00d9ff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        .clear-btn:hover {
-            background: #1f4068;
-        }
+        body { background: #0f0f1a; }
     </style>
 </head>
-<body>
-    <h1>Event Information Viewer</h1>
-    <p class="instructions">Move your mouse, click, press keys, or scroll to see events</p>
-    <button class="clear-btn" onclick="clearLog()">Clear Log</button>
-    <div id="event-log"></div>
+<body class="min-h-screen text-white font-sans antialiased">
+    <main class="max-w-4xl mx-auto px-8 py-10">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan text-sm mb-6 no-underline transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back
+        </a>
+
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold flex items-center gap-3">
+                <span class="text-cyan">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
+                    </svg>
+                </span>
+                Event Viewer
+            </h1>
+        </header>
+
+        <div class="bg-secondary rounded-xl border border-gray-700 p-4 mb-6">
+            <p class="text-gray-400 text-sm">Move your mouse, click, press keys, or scroll to see events captured in real-time.</p>
+        </div>
+
+        <button onclick="clearLog()" class="mb-4 px-5 py-2.5 bg-card text-pink border border-pink/30 rounded-lg hover:bg-cardhover transition-all text-sm font-medium">
+            Clear Log
+        </button>
+
+        <div id="event-log" class="bg-secondary rounded-xl border border-gray-700 p-4 h-[60vh] overflow-y-auto font-mono text-sm"></div>
+    </main>
 
     <script>
         const log = document.getElementById('event-log');
@@ -87,15 +65,29 @@
         function logEvent(event) {
             eventCount++;
             const entry = document.createElement('div');
-            entry.className = 'event-entry';
-            entry.innerHTML = `
-                <span class="timestamp">${eventCount}</span>
-                <span class="type">${event.type}</span>
-                <span class="target">${event.target.tagName || event.target}</span>
-                ${event.clientX !== undefined ? `X:${event.clientX} Y:${event.clientY}` : ''}
-                ${event.key ? ` Key:${event.key}` : ''}
-                ${event.button !== undefined ? ` Button:${event.button}` : ''}
-            `;
+            entry.className = 'flex gap-4 py-2 border-b border-gray-800 last:border-0';
+
+            const timestamp = document.createElement('span');
+            timestamp.className = 'text-gray-600 min-w-[50px]';
+            timestamp.textContent = eventCount;
+
+            const type = document.createElement('span');
+            type.className = 'text-cyan font-semibold min-w-[100px]';
+            type.textContent = event.type;
+
+            const target = document.createElement('span');
+            target.className = 'text-purple';
+            target.textContent = event.target.tagName || 'Window';
+
+            const data = document.createElement('span');
+            data.className = 'text-gray-400 flex-1';
+            let dataStr = '';
+            if (event.clientX !== undefined) dataStr += `X:${event.clientX} Y:${event.clientY}`;
+            if (event.key) dataStr += ` Key:${event.key}`;
+            if (event.button !== undefined) dataStr += ` Btn:${event.button}`;
+            data.textContent = dataStr;
+
+            entry.append(timestamp, type, target, data);
             log.appendChild(entry);
             log.scrollTop = log.scrollHeight;
         }
@@ -105,28 +97,11 @@
             eventCount = 0;
         }
 
-        // Mouse events
-        ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'].forEach(type => {
-            document.addEventListener(type, logEvent);
-        });
-
-        // Keyboard events
-        ['keydown', 'keyup', 'keypress'].forEach(type => {
-            document.addEventListener(type, logEvent);
-        });
-
-        // Touch events
-        ['touchstart', 'touchend', 'touchmove'].forEach(type => {
-            document.addEventListener(type, logEvent);
-        });
-
-        // Wheel/Scroll
+        ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'].forEach(type => document.addEventListener(type, logEvent));
+        ['keydown', 'keyup', 'keypress'].forEach(type => document.addEventListener(type, logEvent));
+        ['touchstart', 'touchend', 'touchmove'].forEach(type => document.addEventListener(type, logEvent));
         document.addEventListener('wheel', logEvent);
-
-        // Focus events
-        ['focus', 'blur'].forEach(type => {
-            document.addEventListener(type, logEvent);
-        });
+        ['focus', 'blur'].forEach(type => document.addEventListener(type, logEvent));
     </script>
 </body>
 </html>
