@@ -4,24 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exam Clock</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'media',
+            darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                    },
                     colors: {
-                        cyan: { DEFAULT: '#0891b2', light: '#06b6d4' },
-                        pink: { DEFAULT: '#db2777', light: '#ec4899' },
-                        purple: { DEFAULT: '#7c3aed', light: '#8b5cf6' },
-                    }
+                        accent: {
+                            DEFAULT: '#0f766e',
+                            light: '#14b8a6',
+                            lighter: '#5eead4',
+                        },
+                    },
                 }
             }
         }
     </script>
+    <style>
+        :root {
+            --bg: #fafaf9;
+            --bg-card: #ffffff;
+            --text: #1c1917;
+            --text-muted: #78716c;
+            --border: #e7e5e4;
+            --accent: #0f766e;
+            --accent-light: #14b8a6;
+        }
+        .dark {
+            --bg: #1c1917;
+            --bg-card: #292524;
+            --text: #fafaf9;
+            --text-muted: #a8a29e;
+            --border: #44403c;
+            --accent: #14b8a6;
+            --accent-light: #5eead4;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .text-muted { color: var(--text-muted); }
+        .text-accent { color: var(--accent); }
+        .text-accent-light { color: var(--accent-light); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease both;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased flex flex-col items-center justify-center transition-colors duration-200">
-    <a href="../index.html" class="absolute top-6 left-6 text-gray-400 dark:text-gray-500 hover:text-cyan flex items-center gap-2 text-sm no-underline transition-colors">
+<body class="min-h-screen font-sans antialiased flex flex-col items-center justify-center">
+    <a href="../index.html" class="absolute top-6 left-6 flex items-center gap-2 text-muted hover:text-accent text-sm font-medium no-underline transition-colors">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12 19 5 12 12 5"/>
@@ -29,19 +78,19 @@
         Back
     </a>
 
-    <div class="text-center px-4">
-        <div id="time" class="text-8xl md:text-[10rem] font-light tracking-tight tabular-nums text-gray-900 dark:text-white">
-            <span id="hours">00</span><span class="text-cyan dark:text-cyan-light opacity-80">:</span><span id="minutes">00</span><span id="seconds-container"><span class="text-cyan dark:text-cyan-light opacity-80">:</span><span id="seconds">00</span></span>
+    <div class="text-center px-4 animate-fade-in">
+        <div id="time" class="text-8xl md:text-[10rem] font-light tracking-tight tabular-nums text-accent-light">
+            <span id="hours">00</span><span class="text-muted opacity-60">:</span><span id="minutes">00</span><span id="seconds-container"><span class="text-muted opacity-60">:</span><span id="seconds">00</span></span>
         </div>
-        <div id="date" class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mt-6">Loading...</div>
-        <div id="tz-display" class="text-gray-400 dark:text-gray-600 mt-2 text-sm"></div>
+        <div id="date" class="text-lg md:text-xl text-muted mt-6">Loading...</div>
+        <div id="tz-display" class="text-muted opacity-60 mt-2 text-sm"></div>
     </div>
 
-    <div class="flex gap-3 mt-10">
-        <button onclick="toggleSeconds()" class="px-5 py-2.5 bg-white dark:bg-gray-900 text-cyan dark:text-cyan-light border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-all text-sm font-medium">
+    <div class="flex gap-3 mt-10 animate-fade-in" style="animation-delay: 0.15s;">
+        <button id="btn-seconds" onclick="toggleSeconds()" class="card rounded-lg px-5 py-2.5 text-sm font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer">
             Toggle Seconds
         </button>
-        <button onclick="toggleDate()" class="px-5 py-2.5 bg-white dark:bg-gray-900 text-cyan dark:text-cyan-light border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-all text-sm font-medium">
+        <button id="btn-date" onclick="toggleDate()" class="card rounded-lg px-5 py-2.5 text-sm font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer">
             Toggle Date
         </button>
     </div>

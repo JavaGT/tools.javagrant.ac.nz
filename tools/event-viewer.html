@@ -4,25 +4,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Viewer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'media',
+            darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
                     colors: {
-                        cyan: { DEFAULT: '#0891b2', light: '#06b6d4' },
-                        pink: { DEFAULT: '#db2777', light: '#ec4899' },
-                        purple: { DEFAULT: '#7c3aed', light: '#8b5cf6' },
-                    }
+                        accent: {
+                            DEFAULT: '#0f766e',
+                            light: '#14b8a6',
+                            lighter: '#5eead4',
+                        },
+                    },
                 }
             }
         }
     </script>
+    <style>
+        :root {
+            --bg: #fafaf9;
+            --bg-card: #ffffff;
+            --text: #1c1917;
+            --text-muted: #78716c;
+            --border: #e7e5e4;
+            --accent: #0f766e;
+            --accent-light: #14b8a6;
+        }
+        .dark {
+            --bg: #1c1917;
+            --bg-card: #292524;
+            --text: #fafaf9;
+            --text-muted: #a8a29e;
+            --border: #44403c;
+            --accent: #14b8a6;
+            --accent-light: #5eead4;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .text-muted { color: var(--text-muted); }
+        .text-accent { color: var(--accent); }
+        .text-accent-light { color: var(--accent-light); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease both;
+        }
+
+        .filter-btn {
+            transition: all 0.15s ease;
+        }
+        .filter-btn.active {
+            background-color: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .filter-btn:not(.active) {
+            background-color: var(--bg-card);
+            color: var(--text-muted);
+            border-color: var(--border);
+        }
+        .filter-btn:not(.active):hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        #event-table tbody {
+            display: block;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+        #event-table thead,
+        #event-table tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        #event-table thead {
+            width: 100%;
+        }
+
+        #event-table::-webkit-scrollbar { width: 6px; }
+        #event-table::-webkit-scrollbar-track { background: transparent; }
+        #event-table::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    </style>
 </head>
-<body class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-200">
-    <main class="max-w-4xl mx-auto px-8 py-10">
-        <a href="../index.html" class="inline-flex items-center gap-2 text-gray-400 dark:text-gray-500 hover:text-cyan text-sm mb-6 no-underline transition-colors">
+<body class="min-h-screen font-sans antialiased">
+    <main class="max-w-4xl mx-auto px-6 py-10">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-muted hover:text-accent text-sm font-medium no-underline mb-6 transition-colors animate-fade-in">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"/>
                 <polyline points="12 19 5 12 12 5"/>
@@ -30,10 +117,10 @@
             Back
         </a>
 
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold flex items-center gap-3">
-                <span class="text-cyan">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <header class="mb-6 animate-fade-in" style="animation-delay: 0.05s;">
+            <h1 class="text-2xl font-bold flex items-center gap-3">
+                <span class="text-accent-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
                     </svg>
                 </span>
@@ -41,61 +128,273 @@
             </h1>
         </header>
 
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-6">
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Move your mouse, click, press keys, or scroll to see events captured in real-time.</p>
+        <p class="card rounded-xl p-4 text-muted text-sm mb-5 animate-fade-in" style="animation-delay: 0.1s;">
+            Move your mouse, click, press keys, or scroll to see events captured in real-time.
+        </p>
+
+        <!-- Filter bar -->
+        <div class="flex flex-wrap items-center gap-2 mb-4 animate-fade-in" style="animation-delay: 0.12s;">
+            <span class="text-muted text-xs font-medium mr-1">Filter:</span>
+            <button id="filter-all" class="filter-btn active rounded-full px-3 py-1 text-xs font-semibold border" onclick="toggleAllFilters()">All</button>
+            <button class="filter-btn active rounded-full px-3 py-1 text-xs font-semibold border" data-filter="mouse">Mouse</button>
+            <button class="filter-btn active rounded-full px-3 py-1 text-xs font-semibold border" data-filter="keyboard">Keyboard</button>
+            <button class="filter-btn active rounded-full px-3 py-1 text-xs font-semibold border" data-filter="touch">Touch</button>
+            <button class="filter-btn active rounded-full px-3 py-1 text-xs font-semibold border" data-filter="scroll">Scroll</button>
+            <button class="filter-btn active rounded-full px-3 py-1 text-xs font-semibold border" data-filter="focus">Focus</button>
+            <div class="ml-auto flex items-center gap-3">
+                <span class="text-muted text-xs" id="event-count">0 events</span>
+                <button onclick="clearLog()" class="card rounded-lg px-3 py-1 text-xs font-medium text-muted hover:text-red-500 hover:border-red-500 transition-all cursor-pointer">
+                    Clear
+                </button>
+            </div>
         </div>
 
-        <button onclick="clearLog()" class="mb-4 px-5 py-2.5 bg-white dark:bg-gray-900 text-pink dark:text-pink-light border border-pink/30 dark:border-pink/50 rounded-lg hover:shadow-md transition-all text-sm font-medium">
-            Clear Log
-        </button>
+        <!-- Latest events highlight -->
+        <div id="latest-events" class="grid grid-cols-3 gap-3 mb-4 animate-fade-in" style="animation-delay: 0.13s;">
+            <div class="card rounded-xl p-4 flex flex-col gap-1">
+                <span class="text-xs text-muted font-medium">Latest</span>
+                <span id="latest-0-type" class="text-xl font-bold font-mono text-accent-light truncate">—</span>
+                <span id="latest-0-data" class="text-xs text-muted font-mono truncate">—</span>
+            </div>
+            <div class="card rounded-xl p-4 flex flex-col gap-1 opacity-70">
+                <span class="text-xs text-muted font-medium">2nd</span>
+                <span id="latest-1-type" class="text-xl font-bold font-mono text-accent-light truncate">—</span>
+                <span id="latest-1-data" class="text-xs text-muted font-mono truncate">—</span>
+            </div>
+            <div class="card rounded-xl p-4 flex flex-col gap-1 opacity-50">
+                <span class="text-xs text-muted font-medium">3rd</span>
+                <span id="latest-2-type" class="text-xl font-bold font-mono text-accent-light truncate">—</span>
+                <span id="latest-2-data" class="text-xs text-muted font-mono truncate">—</span>
+            </div>
+        </div>
 
-        <div id="event-log" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 h-[55vh] overflow-y-auto font-mono text-sm"></div>
+        <!-- Event log table -->
+        <div class="card rounded-xl overflow-hidden animate-fade-in" style="animation-delay: 0.15s;">
+            <table id="event-table" class="w-full font-mono text-xs">
+                <thead>
+                    <tr class="border-b border-[var(--border)] text-muted text-left">
+                        <th class="py-2.5 px-4 w-12 font-medium">#</th>
+                        <th class="py-2.5 px-3 w-32 font-medium">Type</th>
+                        <th class="py-2.5 px-3 w-20 font-medium">Source</th>
+                        <th class="py-2.5 px-3 font-medium">Data</th>
+                    </tr>
+                </thead>
+                <tbody id="event-tbody" class="text-[var(--text)]">
+                </tbody>
+            </table>
+            <div id="empty-state" class="py-12 text-center text-muted text-sm">
+                No events yet — try moving your mouse or pressing a key.
+            </div>
+        </div>
     </main>
 
     <script>
-        const log = document.getElementById('event-log');
+        const tbody = document.getElementById('event-tbody');
+        const countEl = document.getElementById('event-count');
+        const latestEventsEl = document.getElementById('latest-events');
+        const emptyStateEl = document.getElementById('empty-state');
+
+        const EVENT_CATEGORIES = {
+            mouse:    ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'],
+            keyboard: ['keydown', 'keyup', 'keypress'],
+            touch:    ['touchstart', 'touchend', 'touchmove'],
+            scroll:   ['wheel'],
+            focus:    ['focus', 'blur'],
+        };
+
+        const CATEGORY_LABELS = {
+            mouse: 'Mouse',
+            keyboard: 'Keyboard',
+            touch: 'Touch',
+            scroll: 'Scroll',
+            focus: 'Focus',
+        };
+
+        const activeFilters = {
+            mouse: true,
+            keyboard: true,
+            touch: true,
+            scroll: true,
+            focus: true,
+        };
+
         let eventCount = 0;
+        const eventBuffer = [];
+        let lastMouseMove = 0;
 
-        function logEvent(event) {
-            eventCount++;
-            const entry = document.createElement('div');
-            entry.className = 'flex gap-4 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0';
+        function toggleAllFilters() {
+            const allActive = Object.values(activeFilters).every(Boolean);
+            const newState = !allActive;
+            Object.keys(activeFilters).forEach(k => activeFilters[k] = newState);
+            document.querySelectorAll('.filter-btn[data-filter]').forEach(b => {
+                b.classList.toggle('active', newState);
+            });
+            document.getElementById('filter-all').classList.toggle('active', newState);
+            rerenderLog();
+        }
 
-            const timestamp = document.createElement('span');
-            timestamp.className = 'text-gray-400 dark:text-gray-600 min-w-[50px]';
-            timestamp.textContent = eventCount;
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+                activeFilters[filter] = !activeFilters[filter];
+                btn.classList.toggle('active', activeFilters[filter]);
 
-            const type = document.createElement('span');
-            type.className = 'text-cyan dark:text-cyan-light font-semibold min-w-[100px]';
-            type.textContent = event.type;
+                // Sync "All" button
+                const allActive = Object.values(activeFilters).every(Boolean);
+                document.getElementById('filter-all').classList.toggle('active', allActive);
 
-            const target = document.createElement('span');
-            target.className = 'text-purple dark:text-purple-light';
-            target.textContent = event.target.tagName || 'Window';
+                rerenderLog();
+            });
+        });
 
-            const data = document.createElement('span');
-            data.className = 'text-gray-500 dark:text-gray-400 flex-1';
+        function getEventCategory(type) {
+            for (const [cat, types] of Object.entries(EVENT_CATEGORIES)) {
+                if (types.includes(type)) return cat;
+            }
+            return null;
+        }
+
+        function formatEventData(event) {
             let dataStr = '';
             if (event.clientX !== undefined) dataStr += `X:${event.clientX} Y:${event.clientY}`;
-            if (event.key) dataStr += ` Key:${event.key}`;
-            if (event.button !== undefined) dataStr += ` Btn:${event.button}`;
-            data.textContent = dataStr;
+            if (event.key) dataStr += `Key:"${event.key}"`;
+            if (event.button !== undefined) dataStr += `Btn:${event.button}`;
+            if (event.deltaY !== undefined) dataStr += `Scroll:${event.deltaY > 0 ? '↓' : '↑'}`;
+            return dataStr;
+        }
 
-            entry.append(timestamp, type, target, data);
-            log.appendChild(entry);
-            log.scrollTop = log.scrollHeight;
+        function rerenderLog() {
+            tbody.innerHTML = '';
+            let visible = 0;
+            let latestIdx = -1;
+
+            for (let i = eventBuffer.length - 1; i >= 0; i--) {
+                const ev = eventBuffer[i];
+                if (!activeFilters[ev.category]) continue;
+                visible++;
+                if (latestIdx === -1) latestIdx = i;
+            }
+
+            countEl.textContent = `${visible} event${visible !== 1 ? 's' : ''}`;
+
+            if (visible === 0) {
+                emptyStateEl.classList.remove('hidden');
+                latestEventsEl.classList.add('hidden');
+                return;
+            }
+            emptyStateEl.classList.add('hidden');
+
+            // Build rows in original order (newest at bottom)
+            let rowNum = 1;
+            eventBuffer.forEach((ev) => {
+                if (!activeFilters[ev.category]) return;
+                const row = document.createElement('tr');
+                row.className = 'border-b border-[var(--border)] last:border-0 hover:bg-black/2.5 dark:hover:bg-white/2.5 transition-colors';
+                row.innerHTML = `
+                    <td class="py-2 px-4 text-[var(--text-muted)] opacity-60">#${rowNum++}</td>
+                    <td class="py-2 px-3 text-accent-light font-semibold">${ev.type}</td>
+                    <td class="py-2 px-3 text-accent opacity-75 truncate">${ev.target}</td>
+                    <td class="py-2 px-3 text-[var(--text-muted)] truncate">${ev.data}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateLatestEvent();
+        }
+
+        function updateLatestEvent() {
+            // Collect visible events in reverse order (newest first)
+            const visibleEvents = [];
+            for (let i = eventBuffer.length - 1; i >= 0; i--) {
+                if (activeFilters[eventBuffer[i].category]) {
+                    visibleEvents.push(eventBuffer[i]);
+                }
+            }
+
+            if (visibleEvents.length === 0) {
+                latestEventsEl.classList.add('hidden');
+                return;
+            }
+            latestEventsEl.classList.remove('hidden');
+
+            for (let i = 0; i < 3; i++) {
+                const ev = visibleEvents[i];
+                if (ev) {
+                    document.getElementById(`latest-${i}-type`).textContent = ev.type;
+                    document.getElementById(`latest-${i}-data`).textContent = ev.data || '—';
+                    document.getElementById(`latest-${i}-type`).closest('.card').classList.remove('hidden');
+                } else {
+                    document.getElementById(`latest-${i}-type`).closest('.card').classList.add('hidden');
+                }
+            }
+        }
+
+        function logEvent(event) {
+            const category = getEventCategory(event.type);
+            if (!category) return;
+
+            eventCount++;
+
+            const evData = {
+                type: event.type,
+                category,
+                target: event.target.tagName || 'Window',
+                data: formatEventData(event),
+            };
+            eventBuffer.push(evData);
+
+            const visible = eventBuffer.filter(e => activeFilters[e.category]).length;
+            countEl.textContent = `${visible} event${visible !== 1 ? 's' : ''}`;
+
+            if (!activeFilters[category]) {
+                updateLatestEvent();
+                return;
+            }
+
+            emptyStateEl.classList.add('hidden');
+
+            const row = document.createElement('tr');
+            row.className = 'border-b border-[var(--border)] last:border-0 hover:bg-black/2.5 dark:hover:bg-white/2.5 transition-colors';
+            row.innerHTML = `
+                <td class="py-2 px-4 text-[var(--text-muted)] opacity-60">#${visible}</td>
+                <td class="py-2 px-3 text-accent-light font-semibold">${evData.type}</td>
+                <td class="py-2 px-3 text-accent opacity-75 truncate">${evData.target}</td>
+                <td class="py-2 px-3 text-[var(--text-muted)] truncate">${evData.data}</td>
+            `;
+            tbody.appendChild(row);
+
+            // Auto-scroll to bottom
+            tbody.parentElement.parentElement.scrollTop = tbody.parentElement.parentElement.scrollHeight;
+
+            updateLatestEvent();
         }
 
         function clearLog() {
-            log.innerHTML = '';
+            tbody.innerHTML = '';
             eventCount = 0;
+            eventBuffer.length = 0;
+            countEl.textContent = '0 events';
+            latestEventsEl.classList.add('hidden');
+            emptyStateEl.classList.remove('hidden');
         }
 
-        ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'].forEach(type => document.addEventListener(type, logEvent));
-        ['keydown', 'keyup', 'keypress'].forEach(type => document.addEventListener(type, logEvent));
-        ['touchstart', 'touchend', 'touchmove'].forEach(type => document.addEventListener(type, logEvent));
-        document.addEventListener('wheel', logEvent);
-        ['focus', 'blur'].forEach(type => document.addEventListener(type, logEvent));
+        document.addEventListener('mousemove', (e) => {
+            const now = Date.now();
+            if (now - lastMouseMove >= 60) { lastMouseMove = now; logEvent(e); }
+        });
+        ['mousedown', 'mouseup', 'click', 'dblclick'].forEach(type => {
+            document.addEventListener(type, logEvent);
+        });
+        ['keydown', 'keyup', 'keypress'].forEach(type => {
+            document.addEventListener(type, logEvent);
+        });
+        ['touchstart', 'touchend', 'touchmove'].forEach(type => {
+            document.addEventListener(type, logEvent);
+        });
+        document.addEventListener('wheel', logEvent, { passive: true });
+        ['focus', 'blur'].forEach(type => {
+            document.addEventListener(type, logEvent);
+        });
     </script>
 </body>
 </html>
