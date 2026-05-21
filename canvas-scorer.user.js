@@ -188,7 +188,7 @@
     var titleWrap = document.createElement('div');
     var titleDiv = document.createElement('div');
     titleDiv.style.cssText = 'font-size:14px;font-weight:700;';
-    titleDiv.textContent = 'Scorer';
+    titleDiv.textContent = 'Scorer v1.4';
     skeleton.subtitle = document.createElement('span');
     skeleton.subtitle.style.cssText = 'font-size:11px;opacity:0.7;font-weight:400;';
     titleWrap.appendChild(titleDiv);
