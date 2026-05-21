@@ -371,12 +371,8 @@
       }
     });
 
-    // inject into settings section once it appears
-    var observer = new MutationObserver(function() {
-      injectSettingsButton(ids);
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    injectSettingsButton(ids);
+    // inject into settings section after DOM stabilises
+    setTimeout(function() { injectSettingsButton(ids); }, 1000);
 
     window.addEventListener('popstate', function() {
       setTimeout(function() {
