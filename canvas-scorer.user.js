@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Canvas SpeedGrader Scorer
 // @namespace    https://tools.javagrant.ac.nz
-// @version      1.3
+// @version      1.4
 // @description  Floating scoring window for Canvas SpeedGrader — track assignment scores across custom variables in localStorage
 // @author       JavaGT
 // @match        https://canvas.auckland.ac.nz/courses/*/gradebook/speed_grader
@@ -14,8 +14,12 @@
 (function() {
   'use strict';
 
+  if (window.__SCOPE_SCORER__) return;
+  window.__SCOPE_SCORER__ = true;
   if (window !== window.top) return;
 
+  var VERSION = 1;
+  var VERSION_KEY = 'canvas_sg_version';
   var STORAGE_KEY = 'canvas_sg_scores';
   var VARS_KEY = 'canvas_sg_variables';
   var COMMENTS_KEY = 'canvas_sg_comments';
@@ -28,6 +32,17 @@
   var commentPopover = null;
   var win = null;
   var dragState = null;
+
+  var appPhase = 'inactive'; // 'inactive' | 'active' | 'transitioning'
+  var navToken = 0;
+  var _saveTimer = null;
+  var _resurrectionTimer = null;
+
+  function lsSet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {
+      if (e.name === 'QuotaExceededError') console.warn('Scorer: localStorage full — data not saved.');
+    }
+  }
 
   function extractIds() {
     var m = window.location.pathname.match(/\/courses\/(\d+)\/gradebook\/speed_grader/);
@@ -43,23 +58,24 @@
 
   function load() {
     try {
-      var d = localStorage.getItem(STORAGE_KEY);
-      if (d) scores = JSON.parse(d);
-    } catch (_) { scores = {}; }
-    try {
-      var v = localStorage.getItem(VARS_KEY);
-      if (v) variables = JSON.parse(v);
-    } catch (_) { variables = []; }
-    try {
-      var c = localStorage.getItem(COMMENTS_KEY);
-      if (c) commentsStore = JSON.parse(c);
-    } catch (_) { commentsStore = {}; }
+      var ver = localStorage.getItem(VERSION_KEY);
+      if (ver === null) lsSet(VERSION_KEY, VERSION);
+    } catch (_) {}
+    try { var d = localStorage.getItem(STORAGE_KEY); if (d) scores = JSON.parse(d); } catch (_) { scores = {}; }
+    try { var v = localStorage.getItem(VARS_KEY); if (v) variables = JSON.parse(v); } catch (_) { variables = []; }
+    try { var c = localStorage.getItem(COMMENTS_KEY); if (c) commentsStore = JSON.parse(c); } catch (_) { commentsStore = {}; }
   }
 
   function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scores)); } catch (_) {}
-    try { localStorage.setItem(VARS_KEY, JSON.stringify(variables)); } catch (_) {}
-    try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(commentsStore)); } catch (_) {}
+    if (_saveTimer) clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(flushSave, 150);
+  }
+
+  function flushSave() {
+    _saveTimer = null;
+    lsSet(STORAGE_KEY, scores);
+    lsSet(VARS_KEY, variables);
+    lsSet(COMMENTS_KEY, commentsStore);
   }
 
   function addComment(varName, score, text) {
@@ -133,147 +149,127 @@
     save();
   }
 
-  function renderWindow(ids) {
-    if (!win) return;
-    var assignmentKey = getAssignmentKey(ids);
-    var currentScores = getAssignmentScores(ids);
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
+  }
 
-    var titleHtml = 'Scorer';
-    var subtitleHtml = '';
-    if (ids.assignment_id) {
-      subtitleHtml = '<span style="font-size:11px;opacity:0.7;font-weight:400;">Assignment ' + ids.assignment_id + ' &middot; Student ' + (ids.student_id || ids.anonymous_id || '?') + '</span>';
-    }
+  // ---- skeletons (created once, survive renders) ----
+  var skeleton = {
+    rows: null,
+    draftTa: null,
+    subtitle: null,
+  };
 
-    var rowsHtml = '';
-    variables.forEach(function(v) {
-      var checked = currentScores[v] !== undefined && currentScores[v] !== null;
-      var val = checked ? currentScores[v] : 3;
-      var hist = historyForVariable(v);
-      var histHtml = '';
-      if (hist.length) {
-        var vals = hist.map(function(h) { return h.score; });
-        var avg = (vals.reduce(function(a, b) { return a + b; }, 0) / vals.length).toFixed(1);
-        histHtml = '<div style="font-size:10px;color:#a8a29e;margin-top:2px;">prev: ' + vals.join(', ') + ' &middot; avg ' + avg + '</div>';
-      }
-      rowsHtml +=
-        '<div style="margin-bottom:10px;">' +
-        '<div style="display:flex;align-items:center;gap:6px;">' +
-        '<input type="checkbox" class="cv-check" data-var="' + escapeHtml(v) + '" ' + (checked ? 'checked' : '') + ' style="accent-color:#0f766e;cursor:pointer;">' +
-        '<label style="flex:1;font-size:13px;font-weight:500;color:#1c1917;">' + escapeHtml(v) + '</label>' +
-        '<input type="range" min="1" max="5" step="1" class="cv-slider" data-var="' + escapeHtml(v) + '" value="' + val + '" ' + (!checked ? 'disabled' : '') + ' style="width:60px;accent-color:#0f766e;cursor:pointer;">' +
-        '<span class="cv-val" data-var="' + escapeHtml(v) + '" style="font-size:13px;font-weight:600;color:#0f766e;min-width:14px;text-align:center;">' + (checked ? val : '&ndash;') + '</span>' +
-        '<button class="cv-comment-btn" data-var="' + escapeHtml(v) + '" style="background:none;border:none;cursor:pointer;font-size:14px;color:#a8a29e;line-height:1;padding:0 2px;" title="Comment options">&oplus;</button>' +
-        '<button class="cv-del-var" data-var="' + escapeHtml(v) + '" style="background:none;border:none;cursor:pointer;font-size:16px;color:#a8a29e;line-height:1;padding:0 2px;" title="Remove variable">&times;</button>' +
-        '</div>' +
-        histHtml +
-        '</div>';
-    });
+  function buildSkeleton() {
+    win = document.createElement('div');
+    win.id = WINDOW_ID;
+    var s = win.style;
+    s.position = 'fixed';
+    s.top = '80px';
+    s.right = '24px';
+    s.width = '360px';
+    s.background = '#fff';
+    s.border = '1px solid #e7e5e4';
+    s.borderRadius = '12px';
+    s.boxShadow = '0 8px 30px rgba(0,0,0,0.15)';
+    s.zIndex = 999999;
+    s.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    s.fontSize = '13px';
+    s.color = '#1c1917';
+    s.boxSizing = 'border-box';
 
-    if (!variables.length) {
-      rowsHtml = '<div style="font-size:12px;color:#a8a29e;font-style:italic;text-align:center;padding:16px 0;">No variables yet. Add one below.</div>';
-    }
+    // header
+    var header = document.createElement('div');
+    header.id = 'cv-header';
+    header.style.cssText = 'padding:10px 14px;background:#0f766e;color:white;border-radius:10px 10px 0 0;cursor:move;user-select:none;display:flex;justify-content:space-between;align-items:flex-start;';
 
-    win.innerHTML =
-      '<div id="cv-header" style="padding:10px 14px;background:#0f766e;color:white;border-radius:10px 10px 0 0;cursor:move;user-select:none;display:flex;justify-content:space-between;align-items:flex-start;">' +
-      '<div><div style="font-size:14px;font-weight:700;">' + titleHtml + '</div>' + subtitleHtml + '</div>' +
-      '<button id="cv-close" style="background:none;border:none;color:white;cursor:pointer;font-size:20px;line-height:1;padding:0;">&times;</button>' +
-      '</div>' +
-      '<div style="padding:12px 14px;overflow-y:auto;max-height:400px;">' +
-      rowsHtml +
-      '</div>' +
-      '<div style="padding:8px 14px;border-top:1px solid #e7e5e4;">' +
-      '<div style="display:flex;gap:6px;">' +
-      '<input id="cv-new-var" type="text" placeholder="New variable name" style="flex:1;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;outline:none;">' +
-      '<button id="cv-add-var" style="padding:6px 12px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;">Add</button>' +
-      '</div>' +
-      '</div>' +
-      '<div style="padding:8px 14px 12px;border-top:1px solid #e7e5e4;">' +
-      '<textarea id="cv-draft" placeholder="Comment draft&hellip;" style="width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;">' + escapeHtml(commentDraft) + '</textarea>' +
-      '<div style="display:flex;gap:4px;margin-top:4px;">' +
-      '<button id="cv-copy-draft" style="padding:4px 10px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">Copy</button>' +
-      '<button id="cv-clear-draft" style="padding:4px 10px;background:transparent;color:#a8a29e;border:1px solid #d4d4d4;border-radius:4px;cursor:pointer;font-size:11px;">Clear</button>' +
-      '</div>' +
-      '<div style="font-size:10px;color:#a8a29e;margin-top:4px;">Click &#8853; next to a variable for comment options</div>' +
-      '</div>';
+    var titleWrap = document.createElement('div');
+    var titleDiv = document.createElement('div');
+    titleDiv.style.cssText = 'font-size:14px;font-weight:700;';
+    titleDiv.textContent = 'Scorer';
+    skeleton.subtitle = document.createElement('span');
+    skeleton.subtitle.style.cssText = 'font-size:11px;opacity:0.7;font-weight:400;';
+    titleWrap.appendChild(titleDiv);
+    titleWrap.appendChild(skeleton.subtitle);
 
-    win.querySelector('#cv-close').addEventListener('click', closeWindow);
+    var closeBtn = document.createElement('button');
+    closeBtn.id = 'cv-close';
+    closeBtn.style.cssText = 'background:none;border:none;color:white;cursor:pointer;font-size:20px;line-height:1;padding:0;';
+    closeBtn.textContent = '\u00d7';
+    closeBtn.addEventListener('click', closeWindow);
 
-    var header = win.querySelector('#cv-header');
+    header.appendChild(titleWrap);
+    header.appendChild(closeBtn);
     header.addEventListener('mousedown', startDrag);
     header.addEventListener('touchstart', startDragTouch, { passive: false });
+    win.appendChild(header);
 
-    win.querySelectorAll('.cv-check').forEach(function(cb) {
-      cb.addEventListener('change', function() {
-        var varName = cb.getAttribute('data-var');
-        var slider = win.querySelector('.cv-slider[data-var="' + escapeHtml(varName) + '"]');
-        var valSpan = win.querySelector('.cv-val[data-var="' + escapeHtml(varName) + '"]');
-        if (cb.checked) {
-          slider.disabled = false;
-          var n = parseInt(slider.value, 10);
-          currentScores[varName] = n;
-          valSpan.textContent = n;
-        } else {
-          slider.disabled = true;
-          currentScores[varName] = null;
-          valSpan.innerHTML = '&ndash;';
-        }
-        save();
-      });
-    });
+    // rows container
+    skeleton.rows = document.createElement('div');
+    skeleton.rows.style.cssText = 'padding:12px 14px;overflow-y:auto;max-height:400px;';
+    win.appendChild(skeleton.rows);
 
-    win.querySelectorAll('.cv-slider').forEach(function(slider) {
-      slider.addEventListener('input', function() {
-        if (slider.disabled) return;
-        var varName = slider.getAttribute('data-var');
-        var n = parseInt(slider.value, 10);
-        currentScores[varName] = n;
-        var valSpan = win.querySelector('.cv-val[data-var="' + escapeHtml(varName) + '"]');
-        if (valSpan) valSpan.textContent = n;
-        save();
-      });
-    });
+    // add-variable footer
+    var addFooter = document.createElement('div');
+    addFooter.style.cssText = 'padding:8px 14px;border-top:1px solid #e7e5e4;display:flex;gap:6px;';
+    var newVarInput = document.createElement('input');
+    newVarInput.id = 'cv-new-var';
+    newVarInput.type = 'text';
+    newVarInput.placeholder = 'New variable name';
+    newVarInput.style.cssText = 'flex:1;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;outline:none;';
+    var addVarBtn = document.createElement('button');
+    addVarBtn.id = 'cv-add-var';
+    addVarBtn.textContent = 'Add';
+    addVarBtn.style.cssText = 'padding:6px 12px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;';
+    addFooter.appendChild(newVarInput);
+    addFooter.appendChild(addVarBtn);
+    win.appendChild(addFooter);
 
-    win.querySelectorAll('.cv-del-var').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var varName = btn.getAttribute('data-var');
-        if (confirm('Remove variable "' + varName + '" and all its scores?')) {
-          removeVariable(varName);
-          renderWindow(ids);
-        }
-      });
-    });
-
-    win.querySelector('#cv-add-var').addEventListener('click', function() {
-      var inp = win.querySelector('#cv-new-var');
-      var name = inp.value.trim();
+    addVarBtn.addEventListener('click', function() {
+      var name = newVarInput.value.trim();
       if (!name) return;
-      if (!addVariable(name)) { return; }
-      inp.value = '';
-      renderWindow(ids);
+      if (!addVariable(name)) return;
+      newVarInput.value = '';
+      renderRows();
+    });
+    newVarInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addVarBtn.click();
     });
 
-    win.querySelector('#cv-new-var').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        win.querySelector('#cv-add-var').click();
-      }
-    });
+    // draft footer
+    var draftFooter = document.createElement('div');
+    draftFooter.style.cssText = 'padding:8px 14px 12px;border-top:1px solid #e7e5e4;';
+    skeleton.draftTa = document.createElement('textarea');
+    skeleton.draftTa.id = 'cv-draft';
+    skeleton.draftTa.placeholder = 'Comment draft\u2026';
+    skeleton.draftTa.style.cssText = 'width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;';
+    skeleton.draftTa.addEventListener('input', function() { commentDraft = skeleton.draftTa.value; });
 
-    win.querySelectorAll('.cv-comment-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        var varName = btn.getAttribute('data-var');
-        var checked = currentScores[varName] !== undefined && currentScores[varName] !== null;
-        var score = checked ? currentScores[varName] : null;
-        showCommentPopover(btn, varName, score, ids);
-      });
-    });
+    var draftBtns = document.createElement('div');
+    draftBtns.style.cssText = 'display:flex;gap:4px;margin-top:4px;';
+    var copyBtn = document.createElement('button');
+    copyBtn.id = 'cv-copy-draft';
+    copyBtn.textContent = 'Copy';
+    copyBtn.style.cssText = 'padding:4px 10px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;';
+    var clearBtn = document.createElement('button');
+    clearBtn.id = 'cv-clear-draft';
+    clearBtn.textContent = 'Clear';
+    clearBtn.style.cssText = 'padding:4px 10px;background:transparent;color:#a8a29e;border:1px solid #d4d4d4;border-radius:4px;cursor:pointer;font-size:11px;';
+    var hint = document.createElement('div');
+    hint.style.cssText = 'font-size:10px;color:#a8a29e;margin-top:4px;';
+    hint.innerHTML = 'Click &#8853; next to a variable for comment options';
 
-    var draftTa = win.querySelector('#cv-draft');
-    draftTa.addEventListener('input', function() {
-      commentDraft = draftTa.value;
-    });
+    draftBtns.appendChild(copyBtn);
+    draftBtns.appendChild(clearBtn);
+    draftFooter.appendChild(skeleton.draftTa);
+    draftFooter.appendChild(draftBtns);
+    draftFooter.appendChild(hint);
+    win.appendChild(draftFooter);
 
-    win.querySelector('#cv-copy-draft').addEventListener('click', function() {
-      var text = win.querySelector('#cv-draft').value;
+    copyBtn.addEventListener('click', function() {
+      var text = skeleton.draftTa.value;
       if (!text) return;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text);
@@ -287,10 +283,9 @@
         document.body.removeChild(ta);
       }
     });
-
-    win.querySelector('#cv-clear-draft').addEventListener('click', function() {
+    clearBtn.addEventListener('click', function() {
       commentDraft = '';
-      win.querySelector('#cv-draft').value = '';
+      skeleton.draftTa.value = '';
     });
 
     document.addEventListener('click', function(e) {
@@ -298,7 +293,152 @@
         hideCommentPopover();
       }
     });
+
+    document.body.appendChild(win);
   }
+
+  function renderRows() {
+    if (!skeleton.rows) return;
+    var ids = extractIds();
+    if (!ids) return;
+    var currentScores = getAssignmentScores(ids);
+
+    if (ids.assignment_id) {
+      skeleton.subtitle.textContent = 'Assignment ' + ids.assignment_id + ' \u00b7 Student ' + (ids.student_id || ids.anonymous_id || '?');
+    }
+
+    skeleton.draftTa.value = commentDraft;
+
+    skeleton.rows.innerHTML = '';
+
+    if (!variables.length) {
+      var empty = document.createElement('div');
+      empty.style.cssText = 'font-size:12px;color:#a8a29e;font-style:italic;text-align:center;padding:16px 0;';
+      empty.textContent = 'No variables yet. Add one below.';
+      skeleton.rows.appendChild(empty);
+      return;
+    }
+
+    var idsForRender = ids;
+    var token = ++navToken;
+
+    variables.forEach(function(v) {
+      var checked = currentScores[v] !== undefined && currentScores[v] !== null;
+      var val = checked ? currentScores[v] : 3;
+
+      var row = document.createElement('div');
+      row.style.cssText = 'margin-bottom:10px;';
+
+      var line = document.createElement('div');
+      line.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'cv-check';
+      cb.setAttribute('data-var', v);
+      cb.checked = checked;
+      cb.style.cssText = 'accent-color:#0f766e;cursor:pointer;';
+      line.appendChild(cb);
+
+      var label = document.createElement('label');
+      label.style.cssText = 'flex:1;font-size:13px;font-weight:500;color:#1c1917;';
+      label.textContent = v;
+      line.appendChild(label);
+
+      var slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = '1';
+      slider.max = '5';
+      slider.step = '1';
+      slider.className = 'cv-slider';
+      slider.setAttribute('data-var', v);
+      slider.value = val;
+      slider.disabled = !checked;
+      slider.style.cssText = 'width:60px;accent-color:#0f766e;cursor:pointer;';
+      line.appendChild(slider);
+
+      var valSpan = document.createElement('span');
+      valSpan.className = 'cv-val';
+      valSpan.setAttribute('data-var', v);
+      valSpan.style.cssText = 'font-size:13px;font-weight:600;color:#0f766e;min-width:14px;text-align:center;';
+      valSpan.textContent = checked ? val : '\u2013';
+      line.appendChild(valSpan);
+
+      var commentBtn = document.createElement('button');
+      commentBtn.className = 'cv-comment-btn';
+      commentBtn.setAttribute('data-var', v);
+      commentBtn.title = 'Comment options';
+      commentBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:14px;color:#a8a29e;line-height:1;padding:0 2px;';
+      commentBtn.innerHTML = '&oplus;';
+      line.appendChild(commentBtn);
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'cv-del-var';
+      delBtn.setAttribute('data-var', v);
+      delBtn.title = 'Remove variable';
+      delBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;color:#a8a29e;line-height:1;padding:0 2px;';
+      delBtn.textContent = '\u00d7';
+      line.appendChild(delBtn);
+
+      row.appendChild(line);
+
+      // history
+      var hist = historyForVariable(v);
+      if (hist.length) {
+        var vals = hist.map(function(h) { return h.score; });
+        var avg = (vals.reduce(function(a, b) { return a + b; }, 0) / vals.length).toFixed(1);
+        var histDiv = document.createElement('div');
+        histDiv.style.cssText = 'font-size:10px;color:#a8a29e;margin-top:2px;';
+        histDiv.textContent = 'prev: ' + vals.join(', ') + ' \u00b7 avg ' + avg;
+        row.appendChild(histDiv);
+      }
+
+      skeleton.rows.appendChild(row);
+
+      // event listeners
+      cb.addEventListener('change', function() {
+        if (navToken !== token) return;
+        var sliderEl = row.querySelector('.cv-slider');
+        var valEl = row.querySelector('.cv-val');
+        if (cb.checked) {
+          sliderEl.disabled = false;
+          var n = parseInt(sliderEl.value, 10);
+          currentScores[v] = n;
+          valEl.textContent = n;
+        } else {
+          sliderEl.disabled = true;
+          currentScores[v] = null;
+          valEl.textContent = '\u2013';
+        }
+        save();
+      });
+
+      slider.addEventListener('input', function() {
+        if (navToken !== token) return;
+        if (slider.disabled) return;
+        var n = parseInt(slider.value, 10);
+        currentScores[v] = n;
+        var valEl = row.querySelector('.cv-val');
+        if (valEl) valEl.textContent = n;
+        save();
+      });
+
+      commentBtn.addEventListener('click', function() {
+        var checkedNow = currentScores[v] !== undefined && currentScores[v] !== null;
+        var scoreNow = checkedNow ? currentScores[v] : null;
+        showCommentPopover(commentBtn, v, scoreNow, idsForRender);
+      });
+
+      delBtn.addEventListener('click', function() {
+        if (confirm('Remove variable "' + v + '" and all its scores?')) {
+          removeVariable(v);
+          renderRows();
+        }
+      });
+    });
+  }
+
+  // ---- comment popover ----
 
   function showCommentPopover(anchor, varName, score, ids) {
     hideCommentPopover();
@@ -359,12 +499,11 @@
     commentPopover.querySelectorAll('.cv-pick-comment').forEach(function(el) {
       el.addEventListener('click', function() {
         var text = el.getAttribute('data-text');
-        var draftTa = win && win.querySelector('#cv-draft');
-        if (draftTa) {
-          var cur = draftTa.value;
+        if (skeleton.draftTa) {
+          var cur = skeleton.draftTa.value;
           var sep = cur && !cur.endsWith('\n') ? '\n' : '';
-          draftTa.value = cur + sep + '[' + escapeHtml(varName) + ' ' + (score || '?') + '] ' + text;
-          commentDraft = draftTa.value;
+          skeleton.draftTa.value = cur + sep + '[' + escapeHtml(varName) + ' ' + (score || '?') + '] ' + text;
+          commentDraft = skeleton.draftTa.value;
         }
       });
     });
@@ -385,6 +524,8 @@
   function hideCommentPopover() {
     if (commentPopover) { commentPopover.remove(); commentPopover = null; }
   }
+
+  // ---- drag ----
 
   function startDrag(e) {
     dragState = {
@@ -437,34 +578,27 @@
     document.removeEventListener('touchend', endDragTouch);
   }
 
+  // ---- lifecycle ----
+
   function openWindow(ids) {
     if (win && document.body.contains(win)) {
       win.style.display = 'block';
-      renderWindow(ids);
+      renderRows();
+      updateSettingsBtn(true);
+      appPhase = 'active';
       return;
     }
-    if (win && !document.body.contains(win)) {
-      win = null;
-    }
-    win = document.createElement('div');
-    win.id = WINDOW_ID;
-    var s = win.style;
-    s.position = 'fixed';
-    s.top = '80px';
-    s.right = '24px';
-    s.width = '360px';
-    s.background = '#fff';
-    s.border = '1px solid #e7e5e4';
-    s.borderRadius = '12px';
-    s.boxShadow = '0 8px 30px rgba(0,0,0,0.15)';
-    s.zIndex = 999999;
-    s.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    s.fontSize = '13px';
-    s.color = '#1c1917';
-    s.boxSizing = 'border-box';
+    win = null;
+    buildSkeleton();
+    renderRows();
+    updateSettingsBtn(true);
+    appPhase = 'active';
+  }
 
-    document.body.appendChild(win);
-    renderWindow(ids);
+  function closeWindow() {
+    if (win) { win.style.display = 'none'; }
+    updateSettingsBtn(false);
+    appPhase = 'inactive';
   }
 
   function toggleWindow(ids) {
@@ -475,10 +609,16 @@
     }
   }
 
-  function closeWindow() {
-    if (win) { win.style.display = 'none'; }
+  function updateSettingsBtn(active) {
     var btn = document.getElementById('cv-settings-btn');
-    if (btn) btn.classList.remove('cv-active');
+    if (!btn) return;
+    if (active) {
+      btn.classList.add('cv-active');
+      btn.style.background = '#14b8a6';
+    } else {
+      btn.classList.remove('cv-active');
+      btn.style.background = '#0f766e';
+    }
   }
 
   function injectSettingsButton(ids) {
@@ -496,30 +636,26 @@
     btn.style.cssText = 'display:inline-flex;align-items:center;padding:6px 12px;margin:4px 0;background:#0f766e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;line-height:1;';
     btn.addEventListener('click', function() {
       toggleWindow(extractIds());
-      if (win && win.style.display !== 'none') {
-        btn.classList.add('cv-active');
-        btn.style.background = '#14b8a6';
-      } else {
-        btn.classList.remove('cv-active');
-        btn.style.background = '#0f766e';
-      }
+      updateSettingsBtn(win && win.style.display !== 'none');
     });
     section.appendChild(btn);
-
-    // keep active state in sync
-    var origOpen = openWindow;
-    openWindow = function(oid) {
-      origOpen(oid);
-      var b = document.getElementById('cv-settings-btn');
-      if (b) { b.classList.add('cv-active'); b.style.background = '#14b8a6'; }
-    };
   }
 
-  function escapeHtml(s) {
-    var d = document.createElement('div');
-    d.appendChild(document.createTextNode(s));
-    return d.innerHTML;
+  // ---- resurrection observer ----
+  function startResurrectionWatcher() {
+    if (_resurrectionTimer) return;
+    _resurrectionTimer = setInterval(function() {
+      if (appPhase !== 'active') return;
+      if (win && !document.body.contains(win)) {
+        win = null;
+        buildSkeleton();
+        renderRows();
+        updateSettingsBtn(true);
+      }
+    }, 2000);
   }
+
+  // ---- init ----
 
   function init() {
     if (!window.location.pathname.match(/\/speed_grader\/?$/)) return;
@@ -530,27 +666,22 @@
 
     if (variables.length === 0) {
       variables = ['Clarity', 'Structure', 'Depth', 'Originality'];
-      save();
+      flushSave();
     }
 
     openWindow(ids);
+    startResurrectionWatcher();
 
     document.addEventListener('keydown', function(e) {
       if (e.altKey && e.shiftKey && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         toggleWindow(extractIds());
-        var btn = document.getElementById('cv-settings-btn');
-        if (btn) {
-          var isOpen = win && win.style.display !== 'none';
-          btn.style.background = isOpen ? '#14b8a6' : '#0f766e';
-        }
       }
     });
 
-    // inject into settings section after DOM stabilises
     setTimeout(function() { injectSettingsButton(ids); }, 1000);
 
-    // watch for URL changes — Canvas uses pushState between assignments
+    // URL watcher
     var lastUrl = window.location.href;
     var origPushState = history.pushState;
     var origReplaceState = history.replaceState;
@@ -564,19 +695,27 @@
     };
     window.addEventListener('popstate', checkUrlChange);
 
+    window.addEventListener('beforeunload', function() {
+      if (_saveTimer) flushSave();
+    });
+
     function checkUrlChange() {
       if (window.location.href === lastUrl) return;
       lastUrl = window.location.href;
+      var token = ++navToken;
+      appPhase = 'transitioning';
       setTimeout(function() {
+        if (navToken !== token) return;
         if (!window.location.pathname.match(/\/speed_grader\/?$/)) { closeWindow(); return; }
         var newIds = extractIds();
         if (newIds && newIds.assignment_id !== ids.assignment_id) {
           ids = newIds;
           hideCommentPopover();
+          commentDraft = '';
           load();
           openWindow(ids);
         }
-      }, 300);
+      }, 150);
     }
   }
 
