@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Canvas SpeedGrader Scorer
 // @namespace    https://tools.javagrant.ac.nz
-// @version      1.0
+// @version      1.1
 // @description  Floating scoring window for Canvas SpeedGrader — track assignment scores across custom variables in localStorage
 // @author       JavaGT
 // @match        https://canvas.auckland.ac.nz/courses/*/gradebook/speed_grader*
@@ -109,7 +109,8 @@
 
     var rowsHtml = '';
     variables.forEach(function(v) {
-      var val = currentScores[v] !== undefined && currentScores[v] !== null ? currentScores[v] : '';
+      var checked = currentScores[v] !== undefined && currentScores[v] !== null;
+      var val = checked ? currentScores[v] : 3;
       var hist = historyForVariable(v);
       var histHtml = '';
       if (hist.length) {
@@ -119,9 +120,11 @@
       }
       rowsHtml +=
         '<div style="margin-bottom:10px;">' +
-        '<div style="display:flex;align-items:center;gap:4px;">' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+        '<input type="checkbox" class="cv-check" data-var="' + escapeHtml(v) + '" ' + (checked ? 'checked' : '') + ' style="accent-color:#0f766e;cursor:pointer;">' +
         '<label style="flex:1;font-size:13px;font-weight:500;color:#1c1917;">' + escapeHtml(v) + '</label>' +
-        '<input type="number" step="any" class="cv-score" data-var="' + escapeHtml(v) + '" value="' + val + '" placeholder="&ndash;" style="width:70px;padding:4px 6px;border:1px solid #d4d4d4;border-radius:4px;font-size:13px;text-align:right;background:#fff;color:#1c1917;outline:none;">' +
+        '<input type="range" min="1" max="5" step="1" class="cv-slider" data-var="' + escapeHtml(v) + '" value="' + val + '" ' + (!checked ? 'disabled' : '') + ' style="width:60px;accent-color:#0f766e;cursor:pointer;">' +
+        '<span class="cv-val" data-var="' + escapeHtml(v) + '" style="font-size:13px;font-weight:600;color:#0f766e;min-width:14px;text-align:center;">' + (checked ? val : '&ndash;') + '</span>' +
         '<button class="cv-del-var" data-var="' + escapeHtml(v) + '" style="background:none;border:none;cursor:pointer;font-size:16px;color:#a8a29e;line-height:1;padding:0 2px;" title="Remove variable">&times;</button>' +
         '</div>' +
         histHtml +
@@ -145,7 +148,7 @@
       '<input id="cv-new-var" type="text" placeholder="New variable name" style="flex:1;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;outline:none;">' +
       '<button id="cv-add-var" style="padding:6px 12px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;">Add</button>' +
       '</div>' +
-      '<div style="font-size:10px;color:#a8a29e;margin-top:6px;">Scores auto-saved. Leave blank for undefined.</div>' +
+      '<div style="font-size:10px;color:#a8a29e;margin-top:6px;">Check a variable to score it 1&ndash;5 &middot; Auto-saved</div>' +
       '</div>';
 
     win.querySelector('#cv-close').addEventListener('click', closeWindow);
@@ -154,16 +157,33 @@
     header.addEventListener('mousedown', startDrag);
     header.addEventListener('touchstart', startDragTouch, { passive: false });
 
-    win.querySelectorAll('.cv-score').forEach(function(inp) {
-      inp.addEventListener('input', function() {
-        var varName = inp.getAttribute('data-var');
-        var raw = inp.value.trim();
-        if (raw === '') {
-          currentScores[varName] = null;
+    win.querySelectorAll('.cv-check').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var varName = cb.getAttribute('data-var');
+        var slider = win.querySelector('.cv-slider[data-var="' + escapeHtml(varName) + '"]');
+        var valSpan = win.querySelector('.cv-val[data-var="' + escapeHtml(varName) + '"]');
+        if (cb.checked) {
+          slider.disabled = false;
+          var n = parseInt(slider.value, 10);
+          currentScores[varName] = n;
+          valSpan.textContent = n;
         } else {
-          var n = parseFloat(raw);
-          currentScores[varName] = isNaN(n) ? null : n;
+          slider.disabled = true;
+          currentScores[varName] = null;
+          valSpan.innerHTML = '&ndash;';
         }
+        save();
+      });
+    });
+
+    win.querySelectorAll('.cv-slider').forEach(function(slider) {
+      slider.addEventListener('input', function() {
+        if (slider.disabled) return;
+        var varName = slider.getAttribute('data-var');
+        var n = parseInt(slider.value, 10);
+        currentScores[varName] = n;
+        var valSpan = win.querySelector('.cv-val[data-var="' + escapeHtml(varName) + '"]');
+        if (valSpan) valSpan.textContent = n;
         save();
       });
     });
