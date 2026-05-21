@@ -13,6 +13,8 @@
 (function() {
   'use strict';
 
+  if (window !== window.top) return;
+
   var STORAGE_KEY = 'canvas_sg_scores';
   var VARS_KEY = 'canvas_sg_variables';
   var WINDOW_ID = 'canvas-scorer-window';
