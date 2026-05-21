@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Canvas SpeedGrader Scorer
 // @namespace    https://tools.javagrant.ac.nz
-// @version      1.1
+// @version      1.2
 // @description  Floating scoring window for Canvas SpeedGrader — track assignment scores across custom variables in localStorage
 // @author       JavaGT
 // @match        https://canvas.auckland.ac.nz/courses/*/gradebook/speed_grader*
@@ -292,8 +292,52 @@
     renderWindow(ids);
   }
 
+  function toggleWindow(ids) {
+    if (win && win.style.display !== 'none') {
+      closeWindow();
+    } else {
+      openWindow(ids || extractIds());
+    }
+  }
+
   function closeWindow() {
     if (win) { win.style.display = 'none'; }
+    var btn = document.getElementById('cv-settings-btn');
+    if (btn) btn.classList.remove('cv-active');
+  }
+
+  function injectSettingsButton(ids) {
+    var section = document.querySelector('[data-testid="settings-section"]');
+    if (!section || document.getElementById('cv-settings-btn')) return;
+    var btn = document.createElement('button');
+    btn.id = 'cv-settings-btn';
+    btn.title = 'Toggle Scorer (Alt+Shift+S)';
+    btn.innerHTML =
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;">' +
+        '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
+        '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>' +
+      '</svg>' +
+      '<span style="margin-left:4px;font-size:12px;font-weight:600;">Scorer</span>';
+    btn.style.cssText = 'display:inline-flex;align-items:center;padding:6px 12px;margin:4px 0;background:#0f766e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;line-height:1;';
+    btn.addEventListener('click', function() {
+      toggleWindow(extractIds());
+      if (win && win.style.display !== 'none') {
+        btn.classList.add('cv-active');
+        btn.style.background = '#14b8a6';
+      } else {
+        btn.classList.remove('cv-active');
+        btn.style.background = '#0f766e';
+      }
+    });
+    section.appendChild(btn);
+
+    // keep active state in sync
+    var origOpen = openWindow;
+    openWindow = function(oid) {
+      origOpen(oid);
+      var b = document.getElementById('cv-settings-btn');
+      if (b) { b.classList.add('cv-active'); b.style.background = '#14b8a6'; }
+    };
   }
 
   function escapeHtml(s) {
@@ -314,6 +358,25 @@
     }
 
     openWindow(ids);
+
+    document.addEventListener('keydown', function(e) {
+      if (e.altKey && e.shiftKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        toggleWindow(extractIds());
+        var btn = document.getElementById('cv-settings-btn');
+        if (btn) {
+          var isOpen = win && win.style.display !== 'none';
+          btn.style.background = isOpen ? '#14b8a6' : '#0f766e';
+        }
+      }
+    });
+
+    // inject into settings section once it appears
+    var observer = new MutationObserver(function() {
+      injectSettingsButton(ids);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    injectSettingsButton(ids);
 
     window.addEventListener('popstate', function() {
       setTimeout(function() {
