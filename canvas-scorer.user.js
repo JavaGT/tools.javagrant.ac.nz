@@ -24,6 +24,7 @@
   var STORAGE_KEY = 'canvas_sg_scores';
   var VARS_KEY = 'canvas_sg_variables';
   var COMMENTS_KEY = 'canvas_sg_comments';
+  var DRAFT_KEY = 'canvas_sg_draft';
   var WINDOW_ID = 'canvas-scorer-window';
 
   var scores = {};
@@ -65,6 +66,7 @@
     try { var d = localStorage.getItem(STORAGE_KEY); if (d) scores = JSON.parse(d); } catch (_) { scores = {}; }
     try { var v = localStorage.getItem(VARS_KEY); if (v) variables = JSON.parse(v); } catch (_) { variables = []; }
     try { var c = localStorage.getItem(COMMENTS_KEY); if (c) commentsStore = JSON.parse(c); } catch (_) { commentsStore = {}; }
+    try { var dr = localStorage.getItem(DRAFT_KEY); if (dr) commentDraft = dr; } catch (_) {}
   }
 
   function save() {
@@ -77,6 +79,7 @@
     lsSet(STORAGE_KEY, scores);
     lsSet(VARS_KEY, variables);
     lsSet(COMMENTS_KEY, commentsStore);
+    lsSet(DRAFT_KEY, commentDraft);
   }
 
   function addComment(varName, score, text) {
@@ -246,7 +249,7 @@
     skeleton.draftTa.id = 'cv-draft';
     skeleton.draftTa.placeholder = 'Comment draft\u2026';
     skeleton.draftTa.style.cssText = 'width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;';
-    skeleton.draftTa.addEventListener('input', function() { commentDraft = skeleton.draftTa.value; });
+    skeleton.draftTa.addEventListener('input', function() { commentDraft = skeleton.draftTa.value; save(); });
 
     var draftBtns = document.createElement('div');
     draftBtns.style.cssText = 'display:flex;gap:4px;margin-top:4px;';
@@ -287,6 +290,7 @@
     clearBtn.addEventListener('click', function() {
       commentDraft = '';
       skeleton.draftTa.value = '';
+      save();
     });
 
     document.addEventListener('click', function(e) {
@@ -505,6 +509,7 @@
           var sep = cur && !cur.endsWith('\n') ? '\n' : '';
           skeleton.draftTa.value = cur + sep + text;
           commentDraft = skeleton.draftTa.value;
+          save();
         }
       });
     });
@@ -700,6 +705,7 @@
           ids = newIds;
           hideCommentPopover();
           commentDraft = '';
+          flushSave();
           load();
           openWindow(ids);
         }
