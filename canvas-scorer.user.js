@@ -34,6 +34,7 @@
   var commentPopover = null;
   var win = null;
   var dragState = null;
+  var dragOverlay = null;
 
   var appPhase = 'inactive'; // 'inactive' | 'active' | 'transitioning'
   var navToken = 0;
@@ -541,6 +542,9 @@
       offsetX: e.clientX - win.getBoundingClientRect().left,
       offsetY: e.clientY - win.getBoundingClientRect().top,
     };
+    dragOverlay = document.createElement('div');
+    dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999998;cursor:move;';
+    document.body.appendChild(dragOverlay);
     document.addEventListener('mousemove', duringDrag);
     document.addEventListener('mouseup', endDrag);
     e.preventDefault();
@@ -552,6 +556,9 @@
       offsetX: t.clientX - win.getBoundingClientRect().left,
       offsetY: t.clientY - win.getBoundingClientRect().top,
     };
+    dragOverlay = document.createElement('div');
+    dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999998;cursor:move;';
+    document.body.appendChild(dragOverlay);
     document.addEventListener('touchmove', duringDragTouch, { passive: false });
     document.addEventListener('touchend', endDragTouch);
     e.preventDefault();
@@ -577,12 +584,14 @@
 
   function endDrag() {
     dragState = null;
+    if (dragOverlay) { dragOverlay.remove(); dragOverlay = null; }
     document.removeEventListener('mousemove', duringDrag);
     document.removeEventListener('mouseup', endDrag);
   }
 
   function endDragTouch() {
     dragState = null;
+    if (dragOverlay) { dragOverlay.remove(); dragOverlay = null; }
     document.removeEventListener('touchmove', duringDragTouch);
     document.removeEventListener('touchend', endDragTouch);
   }
