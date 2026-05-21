@@ -250,6 +250,9 @@
     skeleton.draftTa.placeholder = 'Comment draft\u2026';
     skeleton.draftTa.style.cssText = 'width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;';
     skeleton.draftTa.addEventListener('input', function() { commentDraft = skeleton.draftTa.value; save(); });
+    skeleton.draftTa.addEventListener('keydown', function(e) { e.stopPropagation(); });
+    skeleton.draftTa.addEventListener('keyup', function(e) { e.stopPropagation(); });
+    skeleton.draftTa.addEventListener('keypress', function(e) { e.stopPropagation(); });
 
     var draftBtns = document.createElement('div');
     draftBtns.style.cssText = 'display:flex;gap:4px;margin-top:4px;';
@@ -651,12 +654,15 @@
   function startResurrectionWatcher() {
     if (_resurrectionTimer) return;
     _resurrectionTimer = setInterval(function() {
-      if (appPhase !== 'active') return;
+      if (appPhase !== 'active' && appPhase !== 'inactive') return;
       if (win && !document.body.contains(win)) {
         win = null;
         buildSkeleton();
         renderRows();
         updateSettingsBtn(true);
+      }
+      if (!document.getElementById('cv-settings-btn')) {
+        injectSettingsButton(extractIds());
       }
     }, 2000);
   }
@@ -685,7 +691,12 @@
       }
     });
 
-    setTimeout(function() { injectSettingsButton(ids); }, 1000);
+    (function tryInject(tries) {
+      injectSettingsButton(ids);
+      if (!document.getElementById('cv-settings-btn') && tries > 0) {
+        setTimeout(function() { tryInject(tries - 1); }, 1500);
+      }
+    })(5);
 
     // URL watcher — polls every 400ms + popstate for instant back/forward
     var lastUrl = window.location.href;
@@ -708,6 +719,7 @@
           flushSave();
           load();
           openWindow(ids);
+          setTimeout(function() { injectSettingsButton(ids); }, 800);
         }
         appPhase = 'active';
       }, 150);
