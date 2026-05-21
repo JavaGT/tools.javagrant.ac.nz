@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Canvas SpeedGrader Scorer
 // @namespace    https://tools.javagrant.ac.nz
-// @version      1.2
+// @version      1.3
 // @description  Floating scoring window for Canvas SpeedGrader — track assignment scores across custom variables in localStorage
 // @author       JavaGT
 // @match        https://canvas.auckland.ac.nz/courses/*/gradebook/speed_grader
@@ -18,10 +18,14 @@
 
   var STORAGE_KEY = 'canvas_sg_scores';
   var VARS_KEY = 'canvas_sg_variables';
+  var COMMENTS_KEY = 'canvas_sg_comments';
   var WINDOW_ID = 'canvas-scorer-window';
 
   var scores = {};
   var variables = [];
+  var commentsStore = {};
+  var commentDraft = '';
+  var commentPopover = null;
   var win = null;
   var dragState = null;
 
@@ -46,11 +50,41 @@
       var v = localStorage.getItem(VARS_KEY);
       if (v) variables = JSON.parse(v);
     } catch (_) { variables = []; }
+    try {
+      var c = localStorage.getItem(COMMENTS_KEY);
+      if (c) commentsStore = JSON.parse(c);
+    } catch (_) { commentsStore = {}; }
   }
 
   function save() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scores)); } catch (_) {}
     try { localStorage.setItem(VARS_KEY, JSON.stringify(variables)); } catch (_) {}
+    try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(commentsStore)); } catch (_) {}
+  }
+
+  function addComment(varName, score, text) {
+    text = text.trim();
+    if (!text) return false;
+    if (!commentsStore[varName]) commentsStore[varName] = {};
+    if (!commentsStore[varName][score]) commentsStore[varName][score] = [];
+    if (commentsStore[varName][score].indexOf(text) === -1) {
+      commentsStore[varName][score].push(text);
+    }
+    save();
+    return true;
+  }
+
+  function getCommentsForScoreRange(varName, score) {
+    var results = [];
+    if (!commentsStore[varName]) return results;
+    for (var s = score - 1; s <= score + 1; s++) {
+      if (commentsStore[varName][s] && commentsStore[varName][s].length) {
+        commentsStore[varName][s].forEach(function(c) {
+          results.push({ score: s, text: c });
+        });
+      }
+    }
+    return results;
   }
 
   function getAssignmentKey(ids) {
@@ -128,6 +162,7 @@
         '<label style="flex:1;font-size:13px;font-weight:500;color:#1c1917;">' + escapeHtml(v) + '</label>' +
         '<input type="range" min="1" max="5" step="1" class="cv-slider" data-var="' + escapeHtml(v) + '" value="' + val + '" ' + (!checked ? 'disabled' : '') + ' style="width:60px;accent-color:#0f766e;cursor:pointer;">' +
         '<span class="cv-val" data-var="' + escapeHtml(v) + '" style="font-size:13px;font-weight:600;color:#0f766e;min-width:14px;text-align:center;">' + (checked ? val : '&ndash;') + '</span>' +
+        '<button class="cv-comment-btn" data-var="' + escapeHtml(v) + '" style="background:none;border:none;cursor:pointer;font-size:14px;color:#a8a29e;line-height:1;padding:0 2px;" title="Comment options">&oplus;</button>' +
         '<button class="cv-del-var" data-var="' + escapeHtml(v) + '" style="background:none;border:none;cursor:pointer;font-size:16px;color:#a8a29e;line-height:1;padding:0 2px;" title="Remove variable">&times;</button>' +
         '</div>' +
         histHtml +
@@ -146,12 +181,19 @@
       '<div style="padding:12px 14px;overflow-y:auto;max-height:400px;">' +
       rowsHtml +
       '</div>' +
-      '<div style="padding:8px 14px 12px;border-top:1px solid #e7e5e4;">' +
+      '<div style="padding:8px 14px;border-top:1px solid #e7e5e4;">' +
       '<div style="display:flex;gap:6px;">' +
       '<input id="cv-new-var" type="text" placeholder="New variable name" style="flex:1;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;outline:none;">' +
       '<button id="cv-add-var" style="padding:6px 12px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;">Add</button>' +
       '</div>' +
-      '<div style="font-size:10px;color:#a8a29e;margin-top:6px;">Check a variable to score it 1&ndash;5 &middot; Auto-saved</div>' +
+      '</div>' +
+      '<div style="padding:8px 14px 12px;border-top:1px solid #e7e5e4;">' +
+      '<textarea id="cv-draft" placeholder="Comment draft&hellip;" style="width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;">' + escapeHtml(commentDraft) + '</textarea>' +
+      '<div style="display:flex;gap:4px;margin-top:4px;">' +
+      '<button id="cv-copy-draft" style="padding:4px 10px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">Copy</button>' +
+      '<button id="cv-clear-draft" style="padding:4px 10px;background:transparent;color:#a8a29e;border:1px solid #d4d4d4;border-radius:4px;cursor:pointer;font-size:11px;">Clear</button>' +
+      '</div>' +
+      '<div style="font-size:10px;color:#a8a29e;margin-top:4px;">Click &#8853; next to a variable for comment options</div>' +
       '</div>';
 
     win.querySelector('#cv-close').addEventListener('click', closeWindow);
@@ -215,6 +257,133 @@
         win.querySelector('#cv-add-var').click();
       }
     });
+
+    win.querySelectorAll('.cv-comment-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        var varName = btn.getAttribute('data-var');
+        var checked = currentScores[varName] !== undefined && currentScores[varName] !== null;
+        var score = checked ? currentScores[varName] : null;
+        showCommentPopover(btn, varName, score, ids);
+      });
+    });
+
+    var draftTa = win.querySelector('#cv-draft');
+    draftTa.addEventListener('input', function() {
+      commentDraft = draftTa.value;
+    });
+
+    win.querySelector('#cv-copy-draft').addEventListener('click', function() {
+      var text = win.querySelector('#cv-draft').value;
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    });
+
+    win.querySelector('#cv-clear-draft').addEventListener('click', function() {
+      commentDraft = '';
+      win.querySelector('#cv-draft').value = '';
+    });
+
+    document.addEventListener('click', function(e) {
+      if (commentPopover && !commentPopover.contains(e.target) && !e.target.closest('.cv-comment-btn')) {
+        hideCommentPopover();
+      }
+    });
+  }
+
+  function showCommentPopover(anchor, varName, score, ids) {
+    hideCommentPopover();
+    commentPopover = document.createElement('div');
+    var checked = score !== null;
+    var related = checked ? getCommentsForScoreRange(varName, score) : [];
+
+    var html = '<div style="font-size:12px;font-weight:600;margin-bottom:4px;">' + escapeHtml(varName);
+    if (checked) html += ' @ score ' + score;
+    html += '</div>';
+
+    if (!checked) {
+      html += '<div style="font-size:11px;color:#a8a29e;font-style:italic;">Score this variable first to see related comments.</div>';
+    } else if (!related.length) {
+      html += '<div style="font-size:11px;color:#a8a29e;font-style:italic;">No previous comments for scores ' + (score-1) + '\u2013' + (score+1) + '.</div>';
+    } else {
+      html += '<div style="font-size:10px;color:#a8a29e;margin-bottom:4px;">Previous comments for scores ' + (score-1) + '\u2013' + (score+1) + ':</div>';
+      related.forEach(function(r) {
+        html += '<div class="cv-pick-comment" data-text="' + escapeHtml(r.text) + '" style="font-size:11px;padding:4px 6px;margin-bottom:3px;background:#f5f5f4;border-radius:4px;cursor:pointer;word-break:break-word;">[' + r.score + '] ' + escapeHtml(r.text) + '</div>';
+      });
+    }
+
+    html += '<div style="margin-top:6px;border-top:1px solid #e7e5e4;padding-top:6px;">';
+    if (checked) {
+      html += '<div style="font-size:10px;color:#a8a29e;margin-bottom:2px;">New comment for score ' + score + ':</div>';
+    } else {
+      html += '<div style="font-size:10px;color:#a8a29e;margin-bottom:2px;">New comment:</div>';
+    }
+    html += '<textarea class="cv-new-comment-text" style="width:100%;min-height:36px;padding:4px 6px;border:1px solid #d4d4d4;border-radius:4px;font-size:11px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;"></textarea>' +
+      '<div style="display:flex;gap:4px;margin-top:4px;">' +
+      '<button class="cv-save-comment" style="padding:4px 10px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">Save</button>' +
+      '<span class="cv-comment-msg" style="font-size:10px;color:#0f766e;align-self:center;"></span>' +
+      '</div></div>';
+
+    commentPopover.innerHTML = html;
+    var s = commentPopover.style;
+    s.position = 'fixed';
+    s.zIndex = 1000000;
+    s.background = '#fff';
+    s.border = '1px solid #d4d4d4';
+    s.borderRadius = '8px';
+    s.padding = '10px';
+    s.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+    s.width = '250px';
+    s.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    s.fontSize = '12px';
+    s.color = '#1c1917';
+
+    document.body.appendChild(commentPopover);
+
+    var rect = anchor.getBoundingClientRect();
+    var top = rect.bottom + 4;
+    var left = Math.max(4, Math.min(rect.left, window.innerWidth - 260));
+    if (top + 300 > window.innerHeight) top = Math.max(4, rect.top - 300);
+    s.top = top + 'px';
+    s.left = left + 'px';
+
+    commentPopover.querySelectorAll('.cv-pick-comment').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var text = el.getAttribute('data-text');
+        var draftTa = win && win.querySelector('#cv-draft');
+        if (draftTa) {
+          var cur = draftTa.value;
+          var sep = cur && !cur.endsWith('\n') ? '\n' : '';
+          draftTa.value = cur + sep + '[' + escapeHtml(varName) + ' ' + (score || '?') + '] ' + text;
+          commentDraft = draftTa.value;
+        }
+      });
+    });
+
+    commentPopover.querySelector('.cv-save-comment').addEventListener('click', function() {
+      var ta = commentPopover.querySelector('.cv-new-comment-text');
+      var text = ta.value.trim();
+      var msg = commentPopover.querySelector('.cv-comment-msg');
+      if (!text) { msg.textContent = 'Empty'; return; }
+      var s = checked ? score : 0;
+      if (addComment(varName, s, text)) {
+        msg.textContent = 'Saved';
+        ta.value = '';
+      } else { msg.textContent = 'Exists'; }
+    });
+  }
+
+  function hideCommentPopover() {
+    if (commentPopover) { commentPopover.remove(); commentPopover = null; }
   }
 
   function startDrag(e) {
@@ -280,7 +449,7 @@
     s.position = 'fixed';
     s.top = '80px';
     s.right = '24px';
-    s.width = '320px';
+    s.width = '360px';
     s.background = '#fff';
     s.border = '1px solid #e7e5e4';
     s.borderRadius = '12px';
