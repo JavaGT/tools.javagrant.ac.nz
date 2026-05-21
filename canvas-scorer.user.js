@@ -4,7 +4,8 @@
 // @version      1.2
 // @description  Floating scoring window for Canvas SpeedGrader — track assignment scores across custom variables in localStorage
 // @author       JavaGT
-// @match        https://canvas.auckland.ac.nz/courses/*/gradebook/speed_grader*
+// @match        https://canvas.auckland.ac.nz/courses/*/gradebook/speed_grader
+// @match        https://canvas.auckland.ac.nz/courses/*/gradebook/speed_grader?*
 // @grant        none
 // @updateURL   https://gist.githubusercontent.com/JavaGT/ba5ef27b2f7047ecc9fc4e73182aa8c9/raw/canvas-scorer.user.js
 // @downloadURL https://gist.githubusercontent.com/JavaGT/ba5ef27b2f7047ecc9fc4e73182aa8c9/raw/canvas-scorer.user.js
@@ -349,6 +350,7 @@
   }
 
   function init() {
+    if (!window.location.pathname.match(/\/speed_grader\/?$/)) return;
     var ids = extractIds();
     if (!ids || !ids.assignment_id) return;
 
