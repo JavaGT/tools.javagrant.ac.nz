@@ -378,16 +378,33 @@
     // inject into settings section after DOM stabilises
     setTimeout(function() { injectSettingsButton(ids); }, 1000);
 
-    window.addEventListener('popstate', function() {
+    // watch for URL changes — Canvas uses pushState between assignments
+    var lastUrl = window.location.href;
+    var origPushState = history.pushState;
+    var origReplaceState = history.replaceState;
+    history.pushState = function() {
+      origPushState.apply(this, arguments);
+      checkUrlChange();
+    };
+    history.replaceState = function() {
+      origReplaceState.apply(this, arguments);
+      checkUrlChange();
+    };
+    window.addEventListener('popstate', checkUrlChange);
+
+    function checkUrlChange() {
+      if (window.location.href === lastUrl) return;
+      lastUrl = window.location.href;
       setTimeout(function() {
+        if (!window.location.pathname.match(/\/speed_grader\/?$/)) { closeWindow(); return; }
         var newIds = extractIds();
         if (newIds && newIds.assignment_id !== ids.assignment_id) {
           ids = newIds;
           load();
           renderWindow(ids);
         }
-      }, 100);
-    });
+      }, 300);
+    }
   }
 
   if (document.readyState === 'loading') {
