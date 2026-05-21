@@ -17,6 +17,7 @@
   if (window.__SCOPE_SCORER__) return;
   window.__SCOPE_SCORER__ = true;
   if (window !== window.top) return;
+  if (!window.location.pathname.match(/\/speed_grader\/?$/)) return;
 
   var VERSION = 1;
   var VERSION_KEY = 'canvas_sg_version';
@@ -681,42 +682,34 @@
 
     setTimeout(function() { injectSettingsButton(ids); }, 1000);
 
-    // URL watcher
+    // URL watcher — polls every 400ms + popstate for instant back/forward
     var lastUrl = window.location.href;
-    var origPushState = history.pushState;
-    var origReplaceState = history.replaceState;
-    history.pushState = function() {
-      origPushState.apply(this, arguments);
-      checkUrlChange();
-    };
-    history.replaceState = function() {
-      origReplaceState.apply(this, arguments);
-      checkUrlChange();
-    };
+    setInterval(checkUrlChange, 400);
     window.addEventListener('popstate', checkUrlChange);
 
-    window.addEventListener('beforeunload', function() {
-      if (_saveTimer) flushSave();
-    });
-
     function checkUrlChange() {
-      if (window.location.href === lastUrl) return;
+      if (window.location.href === lastUrl || appPhase === 'transitioning') return;
       lastUrl = window.location.href;
-      var token = ++navToken;
       appPhase = 'transitioning';
+      var token = ++navToken;
       setTimeout(function() {
         if (navToken !== token) return;
-        if (!window.location.pathname.match(/\/speed_grader\/?$/)) { closeWindow(); return; }
+        if (!window.location.pathname.match(/\/speed_grader\/?$/)) { closeWindow(); appPhase = 'inactive'; return; }
         var newIds = extractIds();
-        if (newIds && newIds.assignment_id !== ids.assignment_id) {
+        if (newIds && (newIds.assignment_id !== ids.assignment_id || newIds.student_id !== ids.student_id)) {
           ids = newIds;
           hideCommentPopover();
           commentDraft = '';
           load();
           openWindow(ids);
         }
+        appPhase = 'active';
       }, 150);
     }
+
+    window.addEventListener('beforeunload', function() {
+      if (_saveTimer) flushSave();
+    });
   }
 
   if (document.readyState === 'loading') {
