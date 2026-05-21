@@ -503,7 +503,7 @@
         if (skeleton.draftTa) {
           var cur = skeleton.draftTa.value;
           var sep = cur && !cur.endsWith('\n') ? '\n' : '';
-          skeleton.draftTa.value = cur + sep + '[' + escapeHtml(varName) + ' ' + (score || '?') + '] ' + text;
+          skeleton.draftTa.value = cur + sep + text;
           commentDraft = skeleton.draftTa.value;
         }
       });
