@@ -109,7 +109,8 @@
   }
 
   function getAssignmentKey(ids) {
-    return ids.course_id + ':' + ids.assignment_id;
+    var student = ids.student_id || ids.anonymous_id || 'unknown';
+    return ids.course_id + ':' + ids.assignment_id + ':' + student;
   }
 
   function getAssignmentScores(ids) {
