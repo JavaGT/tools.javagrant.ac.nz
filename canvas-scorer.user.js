@@ -438,10 +438,13 @@
   }
 
   function openWindow(ids) {
-    if (win) {
+    if (win && document.body.contains(win)) {
       win.style.display = 'block';
       renderWindow(ids);
       return;
+    }
+    if (win && !document.body.contains(win)) {
+      win = null;
     }
     win = document.createElement('div');
     win.id = WINDOW_ID;
@@ -569,8 +572,9 @@
         var newIds = extractIds();
         if (newIds && newIds.assignment_id !== ids.assignment_id) {
           ids = newIds;
+          hideCommentPopover();
           load();
-          renderWindow(ids);
+          openWindow(ids);
         }
       }, 300);
     }
