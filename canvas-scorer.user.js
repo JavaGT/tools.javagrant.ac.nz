@@ -82,9 +82,11 @@
     _saveTimer = null;
     var ids = extractIds();
     if (ids) {
-      drafts[getAssignmentKey(ids)] = commentDraft;
+      var aKey = getAssignmentKey(ids);
+      drafts[aKey] = commentDraft;
       var gradeEl = document.getElementById('cv-draft-grade');
-      if (gradeEl) draftGrades[getAssignmentKey(ids)] = gradeEl.value;
+      if (gradeEl) draftGrades[aKey] = gradeEl.value;
+      updateGradeCount(aKey);
     }
     lsSet(STORAGE_KEY, scores);
     lsSet(VARS_KEY, variables);
@@ -104,6 +106,17 @@
 
   function loadGradeForKey(key) {
     document.getElementById('cv-draft-grade').value = draftGrades[key] !== undefined ? draftGrades[key] : '';
+    updateGradeCount(key);
+  }
+
+  function updateGradeCount(key) {
+    var prefix = key.split(':').slice(0, 2).join(':') + ':';
+    var count = 0;
+    for (var k in draftGrades) {
+      if (k.indexOf(prefix) === 0 && draftGrades[k] !== '') count++;
+    }
+    var el = document.getElementById('cv-grade-count');
+    if (el) el.textContent = count ? ' ' + count + ' graded' : '';
   }
 
   function backupData() {
@@ -270,12 +283,16 @@
     gradeInput.type = 'text';
     gradeInput.placeholder = '\u2013';
     gradeInput.style.cssText = 'flex:1;padding:2px 6px;border:1px solid rgba(255,255,255,0.3);border-radius:3px;font-size:12px;background:rgba(255,255,255,0.15);color:white;outline:none;min-width:0;user-select:text;';
-    gradeInput.addEventListener('input', function() { save(); });
+    gradeInput.addEventListener('input', function() { save(); updateGradeCount(getAssignmentKey(extractIds())); });
     gradeInput.addEventListener('keydown', function(e) { e.stopPropagation(); });
     gradeInput.addEventListener('keyup', function(e) { e.stopPropagation(); });
     gradeInput.addEventListener('keypress', function(e) { e.stopPropagation(); });
+    var gradeCount = document.createElement('span');
+    gradeCount.id = 'cv-grade-count';
+    gradeCount.style.cssText = 'font-size:10px;opacity:0.7;white-space:nowrap;';
     gradeRow.appendChild(gradeLabel);
     gradeRow.appendChild(gradeInput);
+    gradeRow.appendChild(gradeCount);
     header.appendChild(gradeRow);
 
     topRow.addEventListener('mousedown', startDrag);
