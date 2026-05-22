@@ -431,8 +431,9 @@
       line.appendChild(cb);
 
       var label = document.createElement('label');
-      label.style.cssText = 'flex:1;font-size:13px;font-weight:500;color:#1c1917;';
+      label.style.cssText = 'flex:1;font-size:13px;font-weight:500;color:#1c1917;cursor:pointer;';
       label.textContent = v;
+      label.addEventListener('click', function() { cb.click(); });
       line.appendChild(label);
 
       var slider = document.createElement('input');
