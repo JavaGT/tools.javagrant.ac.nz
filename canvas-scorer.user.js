@@ -25,12 +25,14 @@
   var VARS_KEY = 'canvas_sg_variables';
   var COMMENTS_KEY = 'canvas_sg_comments';
   var DRAFTS_KEY = 'canvas_sg_drafts';
+  var GRADES_KEY = 'canvas_sg_grades';
   var WINDOW_ID = 'canvas-scorer-window';
 
   var scores = {};
   var variables = [];
   var commentsStore = {};
   var drafts = {};
+  var draftGrades = {};
   var commentDraft = '';
   var commentPopover = null;
   var win = null;
@@ -68,6 +70,7 @@
     try { var v = localStorage.getItem(VARS_KEY); if (v) variables = JSON.parse(v); } catch (_) { variables = []; }
     try { var c = localStorage.getItem(COMMENTS_KEY); if (c) commentsStore = JSON.parse(c); } catch (_) { commentsStore = {}; }
     try { var dw = localStorage.getItem(DRAFTS_KEY); if (dw) drafts = JSON.parse(dw); } catch (_) { drafts = {}; }
+    try { var dg = localStorage.getItem(GRADES_KEY); if (dg) draftGrades = JSON.parse(dg); } catch (_) { draftGrades = {}; }
   }
 
   function save() {
@@ -78,11 +81,16 @@
   function flushSave() {
     _saveTimer = null;
     var ids = extractIds();
-    if (ids) drafts[getAssignmentKey(ids)] = commentDraft;
+    if (ids) {
+      drafts[getAssignmentKey(ids)] = commentDraft;
+      var gradeEl = document.getElementById('cv-draft-grade');
+      if (gradeEl) draftGrades[getAssignmentKey(ids)] = gradeEl.value;
+    }
     lsSet(STORAGE_KEY, scores);
     lsSet(VARS_KEY, variables);
     lsSet(COMMENTS_KEY, commentsStore);
     lsSet(DRAFTS_KEY, drafts);
+    lsSet(GRADES_KEY, draftGrades);
   }
 
   function saveDraftForKey(key) {
@@ -92,6 +100,29 @@
 
   function loadDraftForKey(key) {
     commentDraft = drafts[key] !== undefined ? drafts[key] : '';
+  }
+
+  function loadGradeForKey(key) {
+    document.getElementById('cv-draft-grade').value = draftGrades[key] !== undefined ? draftGrades[key] : '';
+  }
+
+  function backupData() {
+    var data = {};
+    for (var i = 0; i < localStorage.length; i++) {
+      var key = localStorage.key(i);
+      if (key.indexOf('canvas_sg_') === 0) {
+        try { data[key] = JSON.parse(localStorage.getItem(key)); } catch (_) { data[key] = localStorage.getItem(key); }
+      }
+    }
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'scorer-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   function addComment(varName, score, text) {
@@ -206,8 +237,10 @@
     // header
     var header = document.createElement('div');
     header.id = 'cv-header';
-    header.style.cssText = 'padding:10px 14px;background:#0f766e;color:white;border-radius:10px 10px 0 0;cursor:move;user-select:none;display:flex;justify-content:space-between;align-items:flex-start;';
+    header.style.cssText = 'padding:10px 14px 8px;background:#0f766e;color:white;border-radius:10px 10px 0 0;cursor:move;user-select:none;';
 
+    var topRow = document.createElement('div');
+    topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;';
     var titleWrap = document.createElement('div');
     var titleDiv = document.createElement('div');
     titleDiv.style.cssText = 'font-size:14px;font-weight:700;';
@@ -223,8 +256,28 @@
     closeBtn.textContent = '\u00d7';
     closeBtn.addEventListener('click', closeWindow);
 
-    header.appendChild(titleWrap);
-    header.appendChild(closeBtn);
+    topRow.appendChild(titleWrap);
+    topRow.appendChild(closeBtn);
+    header.appendChild(topRow);
+
+    var gradeRow = document.createElement('div');
+    gradeRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px;';
+    var gradeLabel = document.createElement('span');
+    gradeLabel.style.cssText = 'font-size:11px;opacity:0.8;white-space:nowrap;';
+    gradeLabel.textContent = 'Draft Grade:';
+    var gradeInput = document.createElement('input');
+    gradeInput.id = 'cv-draft-grade';
+    gradeInput.type = 'text';
+    gradeInput.placeholder = '\u2013';
+    gradeInput.style.cssText = 'flex:1;padding:2px 6px;border:1px solid rgba(255,255,255,0.3);border-radius:3px;font-size:12px;background:rgba(255,255,255,0.15);color:white;outline:none;min-width:0;user-select:text;';
+    gradeInput.addEventListener('input', function() { save(); });
+    gradeInput.addEventListener('keydown', function(e) { e.stopPropagation(); });
+    gradeInput.addEventListener('keyup', function(e) { e.stopPropagation(); });
+    gradeInput.addEventListener('keypress', function(e) { e.stopPropagation(); });
+    gradeRow.appendChild(gradeLabel);
+    gradeRow.appendChild(gradeInput);
+    header.appendChild(gradeRow);
+
     header.addEventListener('mousedown', startDrag);
     header.addEventListener('touchstart', startDragTouch, { passive: false });
     win.appendChild(header);
@@ -287,12 +340,20 @@
     hint.style.cssText = 'font-size:10px;color:#a8a29e;margin-top:4px;';
     hint.innerHTML = 'Click &#8853; next to a variable for comment options';
 
+    var backupBtn = document.createElement('button');
+    backupBtn.id = 'cv-backup';
+    backupBtn.textContent = 'Backup';
+    backupBtn.style.cssText = 'padding:4px 10px;background:transparent;color:#a8a29e;border:1px solid #d4d4d4;border-radius:4px;cursor:pointer;font-size:11px;';
+
     draftBtns.appendChild(copyBtn);
     draftBtns.appendChild(clearBtn);
+    draftBtns.appendChild(backupBtn);
     draftFooter.appendChild(skeleton.draftTa);
     draftFooter.appendChild(draftBtns);
     draftFooter.appendChild(hint);
     win.appendChild(draftFooter);
+
+    backupBtn.addEventListener('click', backupData);
 
     copyBtn.addEventListener('click', function() {
       var text = skeleton.draftTa.value;
@@ -714,6 +775,7 @@
     }
 
     openWindow(ids);
+    loadGradeForKey(getAssignmentKey(ids));
     startResurrectionWatcher();
 
     document.addEventListener('keydown', function(e) {
@@ -751,6 +813,7 @@
           load();
           loadDraftForKey(getAssignmentKey(ids));
           openWindow(ids);
+          loadGradeForKey(getAssignmentKey(ids));
           setTimeout(function() { injectSettingsButton(ids); }, 800);
         }
         appPhase = 'active';
