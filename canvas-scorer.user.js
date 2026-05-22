@@ -240,7 +240,7 @@
     header.style.cssText = 'padding:10px 14px 8px;background:#0f766e;color:white;border-radius:10px 10px 0 0;cursor:move;user-select:none;';
 
     var topRow = document.createElement('div');
-    topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;';
+    topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;cursor:grab;';
     var titleWrap = document.createElement('div');
     var titleDiv = document.createElement('div');
     titleDiv.style.cssText = 'font-size:14px;font-weight:700;';
@@ -278,8 +278,8 @@
     gradeRow.appendChild(gradeInput);
     header.appendChild(gradeRow);
 
-    header.addEventListener('mousedown', startDrag);
-    header.addEventListener('touchstart', startDragTouch, { passive: false });
+    topRow.addEventListener('mousedown', startDrag);
+    topRow.addEventListener('touchstart', startDragTouch, { passive: false });
     win.appendChild(header);
 
     // rows container
