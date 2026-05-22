@@ -526,6 +526,7 @@
           skeleton.draftTa.value = cur + sep + text;
           commentDraft = skeleton.draftTa.value;
           save();
+          hideCommentPopover();
         }
       });
     });
