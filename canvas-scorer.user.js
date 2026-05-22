@@ -166,6 +166,11 @@
     save();
   }
 
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
   function escapeHtml(s) {
     var d = document.createElement('div');
     d.appendChild(document.createTextNode(s));
@@ -261,8 +266,8 @@
     skeleton.draftTa = document.createElement('textarea');
     skeleton.draftTa.id = 'cv-draft';
     skeleton.draftTa.placeholder = 'Comment draft\u2026';
-    skeleton.draftTa.style.cssText = 'width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;';
-    skeleton.draftTa.addEventListener('input', function() { commentDraft = skeleton.draftTa.value; save(); });
+    skeleton.draftTa.style.cssText = 'width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:none;box-sizing:border-box;outline:none;overflow:hidden;';
+    skeleton.draftTa.addEventListener('input', function() { commentDraft = skeleton.draftTa.value; save(); autoGrow(skeleton.draftTa); });
     skeleton.draftTa.addEventListener('keydown', function(e) { e.stopPropagation(); });
     skeleton.draftTa.addEventListener('keyup', function(e) { e.stopPropagation(); });
     skeleton.draftTa.addEventListener('keypress', function(e) { e.stopPropagation(); });
@@ -306,6 +311,7 @@
     clearBtn.addEventListener('click', function() {
       commentDraft = '';
       skeleton.draftTa.value = '';
+      autoGrow(skeleton.draftTa);
       save();
     });
 
@@ -329,6 +335,7 @@
     }
 
     skeleton.draftTa.value = commentDraft;
+    autoGrow(skeleton.draftTa);
 
     skeleton.rows.innerHTML = '';
 
@@ -525,6 +532,7 @@
           var sep = cur && !cur.endsWith('\n') ? '\n\n' : '';
           skeleton.draftTa.value = cur + sep + text;
           commentDraft = skeleton.draftTa.value;
+          autoGrow(skeleton.draftTa);
           save();
           hideCommentPopover();
         }
