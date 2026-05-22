@@ -564,7 +564,7 @@
       offsetY: e.clientY - win.getBoundingClientRect().top,
     };
     dragOverlay = document.createElement('div');
-    dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999998;cursor:move;';
+    dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:999998;cursor:move;';
     document.body.appendChild(dragOverlay);
     document.addEventListener('mousemove', duringDrag);
     document.addEventListener('mouseup', endDrag);
@@ -578,7 +578,7 @@
       offsetY: t.clientY - win.getBoundingClientRect().top,
     };
     dragOverlay = document.createElement('div');
-    dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999998;cursor:move;';
+    dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:999998;cursor:move;';
     document.body.appendChild(dragOverlay);
     document.addEventListener('touchmove', duringDragTouch, { passive: false });
     document.addEventListener('touchend', endDragTouch);
