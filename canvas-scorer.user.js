@@ -201,6 +201,7 @@
     s.fontSize = '13px';
     s.color = '#1c1917';
     s.boxSizing = 'border-box';
+    s.userSelect = 'none';
 
     // header
     var header = document.createElement('div');
@@ -240,7 +241,7 @@
     newVarInput.id = 'cv-new-var';
     newVarInput.type = 'text';
     newVarInput.placeholder = 'New variable name';
-    newVarInput.style.cssText = 'flex:1;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;outline:none;';
+    newVarInput.style.cssText = 'flex:1;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;outline:none;user-select:text;';
     var addVarBtn = document.createElement('button');
     addVarBtn.id = 'cv-add-var';
     addVarBtn.textContent = 'Add';
@@ -266,7 +267,7 @@
     skeleton.draftTa = document.createElement('textarea');
     skeleton.draftTa.id = 'cv-draft';
     skeleton.draftTa.placeholder = 'Comment draft\u2026';
-    skeleton.draftTa.style.cssText = 'width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:none;box-sizing:border-box;outline:none;overflow:hidden;';
+    skeleton.draftTa.style.cssText = 'width:100%;min-height:40px;padding:6px 8px;border:1px solid #d4d4d4;border-radius:4px;font-size:12px;font-family:inherit;resize:none;box-sizing:border-box;outline:none;overflow:hidden;user-select:text;';
     skeleton.draftTa.addEventListener('input', function() { commentDraft = skeleton.draftTa.value; save(); autoGrow(skeleton.draftTa); });
     skeleton.draftTa.addEventListener('keydown', function(e) { e.stopPropagation(); });
     skeleton.draftTa.addEventListener('keyup', function(e) { e.stopPropagation(); });
@@ -495,7 +496,7 @@
     } else {
       html += '<div style="font-size:10px;color:#a8a29e;margin-bottom:2px;">New comment:</div>';
     }
-    html += '<textarea class="cv-new-comment-text" style="width:100%;min-height:36px;padding:4px 6px;border:1px solid #d4d4d4;border-radius:4px;font-size:11px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;"></textarea>' +
+    html += '<textarea class="cv-new-comment-text" style="width:100%;min-height:36px;padding:4px 6px;border:1px solid #d4d4d4;border-radius:4px;font-size:11px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;user-select:text;"></textarea>' +
       '<div style="display:flex;gap:4px;margin-top:4px;">' +
       '<button class="cv-save-comment" style="padding:4px 10px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">Save</button>' +
       '<span class="cv-comment-msg" style="font-size:10px;color:#0f766e;align-self:center;"></span>' +
