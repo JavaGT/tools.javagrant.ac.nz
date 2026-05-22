@@ -532,6 +532,9 @@
       });
 
       commentBtn.addEventListener('click', function() {
+        if (commentPopover && commentPopover.getAttribute('data-var') === v) {
+          hideCommentPopover(); return;
+        }
         var checkedNow = currentScores[v] !== undefined && currentScores[v] !== null;
         var scoreNow = checkedNow ? currentScores[v] : null;
         showCommentPopover(commentBtn, v, scoreNow, idsForRender);
@@ -551,6 +554,7 @@
   function showCommentPopover(anchor, varName, score, ids) {
     hideCommentPopover();
     commentPopover = document.createElement('div');
+    commentPopover.setAttribute('data-var', varName);
     var checked = score !== null;
     var related = checked ? getCommentsForScoreRange(varName, score) : [];
 
