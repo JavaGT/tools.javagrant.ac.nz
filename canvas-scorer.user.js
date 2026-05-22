@@ -24,17 +24,17 @@
   var STORAGE_KEY = 'canvas_sg_scores';
   var VARS_KEY = 'canvas_sg_variables';
   var COMMENTS_KEY = 'canvas_sg_comments';
-  var DRAFT_KEY = 'canvas_sg_draft';
+  var DRAFTS_KEY = 'canvas_sg_drafts';
   var WINDOW_ID = 'canvas-scorer-window';
 
   var scores = {};
   var variables = [];
   var commentsStore = {};
+  var drafts = {};
   var commentDraft = '';
   var commentPopover = null;
   var win = null;
   var dragState = null;
-  var dragOverlay = null;
 
   var appPhase = 'inactive'; // 'inactive' | 'active' | 'transitioning'
   var navToken = 0;
@@ -67,7 +67,7 @@
     try { var d = localStorage.getItem(STORAGE_KEY); if (d) scores = JSON.parse(d); } catch (_) { scores = {}; }
     try { var v = localStorage.getItem(VARS_KEY); if (v) variables = JSON.parse(v); } catch (_) { variables = []; }
     try { var c = localStorage.getItem(COMMENTS_KEY); if (c) commentsStore = JSON.parse(c); } catch (_) { commentsStore = {}; }
-    try { var dr = localStorage.getItem(DRAFT_KEY); if (dr) commentDraft = dr; } catch (_) {}
+    try { var dw = localStorage.getItem(DRAFTS_KEY); if (dw) drafts = JSON.parse(dw); } catch (_) { drafts = {}; }
   }
 
   function save() {
@@ -77,10 +77,21 @@
 
   function flushSave() {
     _saveTimer = null;
+    var ids = extractIds();
+    if (ids) drafts[getAssignmentKey(ids)] = commentDraft;
     lsSet(STORAGE_KEY, scores);
     lsSet(VARS_KEY, variables);
     lsSet(COMMENTS_KEY, commentsStore);
-    lsSet(DRAFT_KEY, commentDraft);
+    lsSet(DRAFTS_KEY, drafts);
+  }
+
+  function saveDraftForKey(key) {
+    drafts[key] = commentDraft;
+    save();
+  }
+
+  function loadDraftForKey(key) {
+    commentDraft = drafts[key] !== undefined ? drafts[key] : '';
   }
 
   function addComment(varName, score, text) {
@@ -685,6 +696,7 @@
     if (!ids || !ids.assignment_id) return;
 
     load();
+    loadDraftForKey(getAssignmentKey(ids));
 
     if (variables.length === 0) {
       variables = ['Clarity', 'Structure', 'Depth', 'Originality'];
@@ -723,11 +735,11 @@
         if (!window.location.pathname.match(/\/speed_grader\/?$/)) { closeWindow(); appPhase = 'inactive'; return; }
         var newIds = extractIds();
         if (newIds && (newIds.assignment_id !== ids.assignment_id || newIds.student_id !== ids.student_id)) {
-          ids = newIds;
           hideCommentPopover();
-          commentDraft = '';
-          flushSave();
+          saveDraftForKey(getAssignmentKey(ids));
+          ids = newIds;
           load();
+          loadDraftForKey(getAssignmentKey(ids));
           openWindow(ids);
           setTimeout(function() { injectSettingsButton(ids); }, 800);
         }
