@@ -511,7 +511,7 @@
         var text = el.getAttribute('data-text');
         if (skeleton.draftTa) {
           var cur = skeleton.draftTa.value;
-          var sep = cur && !cur.endsWith('\n') ? '\n' : '';
+          var sep = cur && !cur.endsWith('\n') ? '\n\n' : '';
           skeleton.draftTa.value = cur + sep + text;
           commentDraft = skeleton.draftTa.value;
           save();
