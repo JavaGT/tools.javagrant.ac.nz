@@ -37,6 +37,7 @@
   var commentPopover = null;
   var win = null;
   var dragState = null;
+  var dragOverlay = null;
 
   var appPhase = 'inactive'; // 'inactive' | 'active' | 'transitioning'
   var navToken = 0;
