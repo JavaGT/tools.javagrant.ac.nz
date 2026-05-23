@@ -113,11 +113,23 @@
   function updateGradeCount(key) {
     var prefix = key.split(':').slice(0, 2).join(':') + ':';
     var count = 0;
+    var sum = 0;
     for (var k in draftGrades) {
-      if (k.indexOf(prefix) === 0 && draftGrades[k] !== '') count++;
+      if (k.indexOf(prefix) === 0 && draftGrades[k] !== '') {
+        count++;
+        var num = parseFloat(draftGrades[k]);
+        if (!isNaN(num)) sum += num;
+      }
     }
     var el = document.getElementById('cv-grade-count');
-    if (el) el.textContent = count ? ' ' + count + ' graded' : '';
+    if (el) {
+      if (count) {
+        var avg = (sum / count).toFixed(1);
+        el.textContent = ' ' + count + ' graded \u00b7 avg ' + avg;
+      } else {
+        el.textContent = '';
+      }
+    }
   }
 
   function backupData() {
