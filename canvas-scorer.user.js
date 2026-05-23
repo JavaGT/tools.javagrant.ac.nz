@@ -44,6 +44,10 @@
   var _saveTimer = null;
   var _resurrectionTimer = null;
 
+  var baseFontSize = 13;
+  var MIN_FONT = 10;
+  var MAX_FONT = 20;
+
   function lsSet(key, val) {
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {
       if (e.name === 'QuotaExceededError') console.warn('Scorer: localStorage full — data not saved.');
@@ -62,6 +66,8 @@
     };
   }
 
+  var FONT_SIZE_KEY = 'canvas_sg_font_size';
+
   function load() {
     try {
       var ver = localStorage.getItem(VERSION_KEY);
@@ -72,6 +78,7 @@
     try { var c = localStorage.getItem(COMMENTS_KEY); if (c) commentsStore = JSON.parse(c); } catch (_) { commentsStore = {}; }
     try { var dw = localStorage.getItem(DRAFTS_KEY); if (dw) drafts = JSON.parse(dw); } catch (_) { drafts = {}; }
     try { var dg = localStorage.getItem(GRADES_KEY); if (dg) draftGrades = JSON.parse(dg); } catch (_) { draftGrades = {}; }
+    try { var fs = localStorage.getItem(FONT_SIZE_KEY); if (fs) baseFontSize = parseInt(fs, 10) || 13; } catch (_) {}
   }
 
   function save() {
@@ -94,6 +101,7 @@
     lsSet(COMMENTS_KEY, commentsStore);
     lsSet(DRAFTS_KEY, drafts);
     lsSet(GRADES_KEY, draftGrades);
+    lsSet(FONT_SIZE_KEY, baseFontSize);
   }
 
   function saveDraftForKey(key) {
@@ -223,6 +231,16 @@
     save();
   }
 
+  function applyFontSize() {
+    if (win) win.style.fontSize = baseFontSize + 'px';
+  }
+
+  function changeFontSize(delta) {
+    baseFontSize = Math.min(MAX_FONT, Math.max(MIN_FONT, baseFontSize + delta));
+    applyFontSize();
+    save();
+  }
+
   function autoGrow(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
@@ -283,6 +301,23 @@
     closeBtn.addEventListener('click', closeWindow);
 
     topRow.appendChild(titleWrap);
+
+    var fontBtnGroup = document.createElement('div');
+    fontBtnGroup.style.cssText = 'display:flex;align-items:center;gap:2px;';
+    var fontSizeDown = document.createElement('button');
+    fontSizeDown.textContent = '\u2212';
+    fontSizeDown.title = 'Decrease font size';
+    fontSizeDown.style.cssText = 'background:none;border:none;color:white;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;';
+    var fontSizeUp = document.createElement('button');
+    fontSizeUp.textContent = '+';
+    fontSizeUp.title = 'Increase font size';
+    fontSizeUp.style.cssText = 'background:none;border:none;color:white;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;';
+    fontSizeDown.addEventListener('click', function() { changeFontSize(-1); });
+    fontSizeUp.addEventListener('click', function() { changeFontSize(1); });
+    fontBtnGroup.appendChild(fontSizeDown);
+    fontBtnGroup.appendChild(fontSizeUp);
+    topRow.appendChild(fontBtnGroup);
+
     topRow.appendChild(closeBtn);
     header.appendChild(topRow);
 
@@ -719,6 +754,7 @@
   function openWindow(ids) {
     if (win && document.body.contains(win)) {
       win.style.display = 'block';
+      applyFontSize();
       renderRows();
       updateSettingsBtn(true);
       appPhase = 'active';
@@ -726,6 +762,7 @@
     }
     win = null;
     buildSkeleton();
+    applyFontSize();
     renderRows();
     updateSettingsBtn(true);
     appPhase = 'active';
