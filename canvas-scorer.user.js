@@ -232,7 +232,23 @@
   }
 
   function applyFontSize() {
-    if (win) win.style.fontSize = baseFontSize + 'px';
+    if (!win) return;
+    var ratio = baseFontSize / 13;
+    var els = win.querySelectorAll('*');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      var orig = el.getAttribute('data-fs');
+      if (orig === null) {
+        var fs = parseInt(el.style.fontSize, 10);
+        if (fs && !isNaN(fs)) {
+          el.setAttribute('data-fs', fs);
+          orig = fs;
+        }
+      }
+      if (orig !== null) {
+        el.style.fontSize = Math.round(parseInt(orig, 10) * ratio) + 'px';
+      }
+    }
   }
 
   function changeFontSize(delta) {
@@ -307,11 +323,11 @@
     var fontSizeDown = document.createElement('button');
     fontSizeDown.textContent = '\u2212';
     fontSizeDown.title = 'Decrease font size';
-    fontSizeDown.style.cssText = 'background:none;border:none;color:white;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;';
+    fontSizeDown.style.cssText = 'background:none;border:none;color:white;cursor:pointer;line-height:1;padding:0 2px;font-weight:700;';
     var fontSizeUp = document.createElement('button');
     fontSizeUp.textContent = '+';
     fontSizeUp.title = 'Increase font size';
-    fontSizeUp.style.cssText = 'background:none;border:none;color:white;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;';
+    fontSizeUp.style.cssText = 'background:none;border:none;color:white;cursor:pointer;line-height:1;padding:0 2px;font-weight:700;';
     fontSizeDown.addEventListener('click', function() { changeFontSize(-1); });
     fontSizeUp.addEventListener('click', function() { changeFontSize(1); });
     fontBtnGroup.appendChild(fontSizeDown);
@@ -754,16 +770,16 @@
   function openWindow(ids) {
     if (win && document.body.contains(win)) {
       win.style.display = 'block';
-      applyFontSize();
       renderRows();
+      applyFontSize();
       updateSettingsBtn(true);
       appPhase = 'active';
       return;
     }
     win = null;
     buildSkeleton();
-    applyFontSize();
     renderRows();
+    applyFontSize();
     updateSettingsBtn(true);
     appPhase = 'active';
   }
