@@ -365,7 +365,7 @@
 
     // rows container
     skeleton.rows = document.createElement('div');
-    skeleton.rows.style.cssText = 'padding:12px 14px;overflow-y:auto;max-height:400px;';
+    skeleton.rows.style.cssText = 'padding:12px 14px;overflow-y:auto;max-height:300px;';
     win.appendChild(skeleton.rows);
 
     // add-variable footer
