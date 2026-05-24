@@ -287,30 +287,35 @@
     if (!text) return false;
     // Try TinyMCE API first
     if (window.tinymce) {
-      var editors = tinymce.editors;
-      for (var i = 0; i < editors.length; i++) {
-        var ed = editors[i];
-        if (ed.id && ed.id.indexOf('feedback') !== -1) {
-          ed.setContent(text);
-          return true;
+      try {
+        var editors = tinymce.editors;
+        for (var i = 0; i < editors.length; i++) {
+          var ed = editors[i];
+          if (ed && !ed.isHidden()) {
+            ed.setContent(text);
+            return true;
+          }
         }
-      }
-      // fallback: use any visible editor
-      for (var i = 0; i < editors.length; i++) {
-        var ed = editors[i];
-        if (ed && !ed.isHidden()) {
-          ed.setContent(text);
-          return true;
-        }
-      }
+      } catch(_) {}
     }
-    // Try iframe body directly
-    var iframes = document.querySelectorAll('iframe');
+    // Try iframe by class (tox-edit-area__iframe) or title
+    var iframes = document.querySelectorAll('iframe.tox-edit-area__iframe, iframe[title*="Rich Text"], iframe[title*="Feedback"], iframe[id$="_ifr"]');
     for (var i = 0; i < iframes.length; i++) {
       try {
-        var body = iframes[i].contentDocument.body;
-        if (body && body.classList.contains('mce-content-body')) {
-          body.innerHTML = text;
+        var doc = iframes[i].contentDocument;
+        if (doc) {
+          doc.body.innerHTML = text;
+          return true;
+        }
+      } catch(_) {}
+    }
+    // Fallback: try any iframe body that looks editable
+    iframes = document.querySelectorAll('iframe');
+    for (var i = 0; i < iframes.length; i++) {
+      try {
+        var doc = iframes[i].contentDocument;
+        if (doc && doc.body && !doc.body.innerHTML && doc.designMode === 'on') {
+          doc.body.innerHTML = text;
           return true;
         }
       } catch(_) {}
