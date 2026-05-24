@@ -283,6 +283,39 @@
     return document.querySelector('[data-testid*="grade"] input, input[data-testid*="grade"]');
   }
 
+  function findSubmitCommentBtn() {
+    var sel = [
+      'button[data-testid="submit-comment-button"]',
+      'button[data-testid="comment-submit-button"]',
+    ];
+    // data-testid selectors
+    for (var i = 0; i < sel.length; i++) {
+      var el = document.querySelector(sel[i]);
+      if (el) return el;
+    }
+    // find submit button in the feedback/comment area
+    var btns = document.querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) {
+      var text = btns[i].textContent.trim().toLowerCase();
+      if (text === 'submit' || text === 'submit comment') return btns[i];
+    }
+    // look for any form submit near the feedback iframe
+    var iframe = document.querySelector('iframe.tox-edit-area__iframe');
+    if (iframe) {
+      var wrapper = iframe.closest('[data-testid*="feedback"], [data-testid*="comment"], .tox, .feedback');
+      if (wrapper) {
+        var btn = wrapper.querySelector('button[type="submit"]');
+        if (btn) return btn;
+        // fallback: any visible button in the wrapper
+        btns = wrapper.querySelectorAll('button');
+        for (var i = 0; i < btns.length; i++) {
+          if (btns[i].offsetParent !== null) return btns[i];
+        }
+      }
+    }
+    return null;
+  }
+
   function setFeedbackInCanvas(text) {
     if (!text) return false;
     // Try TinyMCE API first
@@ -328,25 +361,38 @@
     var gradeVal = grade ? grade.value.trim() : '';
     var commentVal = commentDraft.trim();
 
-    // 1. Set feedback first (user says submitting grade reloads the page)
+    // 1. Set feedback content in TinyMCE
     var feedbackOk = false;
     if (commentVal) {
       feedbackOk = setFeedbackInCanvas(commentVal);
     }
 
-    // 2. Set grade input
+    // 2. Submit comment
+    var commentSubmitted = false;
+    if (feedbackOk) {
+      var submitBtn = findSubmitCommentBtn();
+      if (submitBtn) {
+        submitBtn.click();
+        commentSubmitted = true;
+      }
+    }
+
+    // 3. Focus, set, and blur grade input
     var gradeOk = false;
     var gradeInput = findGradeInput();
     if (gradeInput && gradeVal) {
+      gradeInput.focus();
       gradeInput.value = gradeVal;
       gradeInput.dispatchEvent(new Event('input', { bubbles: true }));
       gradeInput.dispatchEvent(new Event('change', { bubbles: true }));
+      gradeInput.blur();
       gradeOk = true;
     }
 
-    // 3. Flash feedback
+    // 4. Flash feedback
     var msg = [];
-    if (feedbackOk && commentVal) msg.push('feedback');
+    if (feedbackOk) msg.push('feedback');
+    if (commentSubmitted) msg.push('comment submitted');
     if (gradeOk) msg.push('grade');
     if (msg.length) {
       flashMsg('Pushed ' + msg.join(' + ') + ' to Canvas');
