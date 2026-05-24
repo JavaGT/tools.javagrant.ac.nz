@@ -366,9 +366,12 @@
       return;
     }
 
+    // Convert newlines to <br> for HTML feedback
+    var htmlComment = commentVal.replace(/\n/g, '<br>');
+
     // Step 1: Set feedback content in TinyMCE
-    if (commentVal) {
-      var ok = setFeedbackInCanvas(commentVal);
+    if (htmlComment) {
+      var ok = setFeedbackInCanvas(htmlComment);
       if (!ok) {
         flashMsg('Feedback iframe not found');
       }
@@ -377,21 +380,23 @@
     // Chain remaining steps with delays
     setTimeout(function() {
       // Step 2: Submit comment
-      if (commentVal) {
+      if (htmlComment) {
         var submitBtn = findSubmitCommentBtn();
         if (submitBtn) submitBtn.click();
       }
 
       setTimeout(function() {
         // Step 3: Focus grade input
-        var gradeInput = findGradeInput();
+        var gradeInput = document.querySelector('input[data-testid="grade-input"]');
+        if (!gradeInput) gradeInput = findGradeInput();
         if (gradeInput && gradeVal) {
           gradeInput.focus();
         }
 
         setTimeout(function() {
-          // Step 4: Set grade value
-          var gradeInput = findGradeInput();
+          // Step 4: Type out grade value
+          var gradeInput = document.querySelector('input[data-testid="grade-input"]');
+          if (!gradeInput) gradeInput = findGradeInput();
           if (gradeInput && gradeVal) {
             gradeInput.value = gradeVal;
             gradeInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -399,10 +404,14 @@
           }
 
           setTimeout(function() {
-            // Step 5: Blur grade input
-            var gradeInput = findGradeInput();
-            if (gradeInput && gradeVal) {
-              gradeInput.blur();
+            // Step 5: Click grading panel to defocus
+            var panel = document.querySelector('[data-testid="speedgrader-grading-panel"]');
+            if (panel) {
+              panel.click();
+            } else {
+              var gradeInput = document.querySelector('input[data-testid="grade-input"]');
+              if (!gradeInput) gradeInput = findGradeInput();
+              if (gradeInput) gradeInput.blur();
             }
 
             flashMsg('Pushed to Canvas');
