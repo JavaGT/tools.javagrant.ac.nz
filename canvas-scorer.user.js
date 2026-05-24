@@ -361,48 +361,55 @@
     var gradeVal = grade ? grade.value.trim() : '';
     var commentVal = commentDraft.trim();
 
-    // 1. Set feedback content in TinyMCE
-    var feedbackOk = false;
-    if (commentVal) {
-      feedbackOk = setFeedbackInCanvas(commentVal);
+    if (!commentVal && !gradeVal) {
+      flashMsg('Nothing to push — fill grade and/or comment first');
+      return;
     }
 
-    // 2. Submit comment
-    var commentSubmitted = false;
-    if (feedbackOk) {
-      var submitBtn = findSubmitCommentBtn();
-      if (submitBtn) {
-        submitBtn.click();
-        commentSubmitted = true;
+    // Step 1: Set feedback content in TinyMCE
+    if (commentVal) {
+      var ok = setFeedbackInCanvas(commentVal);
+      if (!ok) {
+        flashMsg('Feedback iframe not found');
       }
     }
 
-    // 3. Focus, set, and blur grade input
-    var gradeOk = false;
-    var gradeInput = findGradeInput();
-    if (gradeInput && gradeVal) {
-      gradeInput.focus();
-      gradeInput.value = gradeVal;
-      gradeInput.dispatchEvent(new Event('input', { bubbles: true }));
-      gradeInput.dispatchEvent(new Event('change', { bubbles: true }));
-      gradeInput.blur();
-      gradeOk = true;
-    }
+    // Chain remaining steps with delays
+    setTimeout(function() {
+      // Step 2: Submit comment
+      if (commentVal) {
+        var submitBtn = findSubmitCommentBtn();
+        if (submitBtn) submitBtn.click();
+      }
 
-    // 4. Flash feedback
-    var msg = [];
-    if (feedbackOk) msg.push('feedback');
-    if (commentSubmitted) msg.push('comment submitted');
-    if (gradeOk) msg.push('grade');
-    if (msg.length) {
-      flashMsg('Pushed ' + msg.join(' + ') + ' to Canvas');
-    } else if (!gradeVal && !commentVal) {
-      flashMsg('Nothing to push — fill grade and/or comment first');
-    } else if (!feedbackOk && commentVal) {
-      flashMsg('Grade set, but feedback iframe not found');
-    } else {
-      flashMsg('Canvas grade input not found');
-    }
+      setTimeout(function() {
+        // Step 3: Focus grade input
+        var gradeInput = findGradeInput();
+        if (gradeInput && gradeVal) {
+          gradeInput.focus();
+        }
+
+        setTimeout(function() {
+          // Step 4: Set grade value
+          var gradeInput = findGradeInput();
+          if (gradeInput && gradeVal) {
+            gradeInput.value = gradeVal;
+            gradeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            gradeInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+
+          setTimeout(function() {
+            // Step 5: Blur grade input
+            var gradeInput = findGradeInput();
+            if (gradeInput && gradeVal) {
+              gradeInput.blur();
+            }
+
+            flashMsg('Pushed to Canvas');
+          }, 150);
+        }, 150);
+      }, 300);
+    }, 200);
   }
 
   var flashTimer = null;
