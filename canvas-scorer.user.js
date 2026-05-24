@@ -403,19 +403,7 @@
             gradeInput.dispatchEvent(new Event('change', { bubbles: true }));
           }
 
-          setTimeout(function() {
-            // Step 5: Click grading panel to defocus
-            var panel = document.querySelector('[data-testid="speedgrader-grading-panel"]');
-            if (panel) {
-              panel.click();
-            } else {
-              var gradeInput = document.querySelector('input[data-testid="grade-input"]');
-              if (!gradeInput) gradeInput = findGradeInput();
-              if (gradeInput) gradeInput.blur();
-            }
-
-            flashMsg('Pushed to Canvas');
-          }, 350);
+          flashMsg('Pushed to Canvas');
         }, 350);
       }, 350);
     }, 350);
