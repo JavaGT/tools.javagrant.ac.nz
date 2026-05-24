@@ -268,6 +268,104 @@
     return d.innerHTML;
   }
 
+  function findGradeInput() {
+    var sel = [
+      'input[data-testid="grade-input"]',
+      'input.css-lykru6-textInput',
+      'input[type="text"][name*="grade"]',
+      '#grading-box-input',
+      'input.grading-box',
+    ];
+    for (var i = 0; i < sel.length; i++) {
+      var el = document.querySelector(sel[i]);
+      if (el) return el;
+    }
+    return document.querySelector('[data-testid*="grade"] input, input[data-testid*="grade"]');
+  }
+
+  function setFeedbackInCanvas(text) {
+    if (!text) return false;
+    // Try TinyMCE API first
+    if (window.tinymce) {
+      var editors = tinymce.editors;
+      for (var i = 0; i < editors.length; i++) {
+        var ed = editors[i];
+        if (ed.id && ed.id.indexOf('feedback') !== -1) {
+          ed.setContent(text);
+          return true;
+        }
+      }
+      // fallback: use any visible editor
+      for (var i = 0; i < editors.length; i++) {
+        var ed = editors[i];
+        if (ed && !ed.isHidden()) {
+          ed.setContent(text);
+          return true;
+        }
+      }
+    }
+    // Try iframe body directly
+    var iframes = document.querySelectorAll('iframe');
+    for (var i = 0; i < iframes.length; i++) {
+      try {
+        var body = iframes[i].contentDocument.body;
+        if (body && body.classList.contains('mce-content-body')) {
+          body.innerHTML = text;
+          return true;
+        }
+      } catch(_) {}
+    }
+    return false;
+  }
+
+  function pushToCanvas() {
+    var grade = document.getElementById('cv-draft-grade');
+    var gradeVal = grade ? grade.value.trim() : '';
+    var commentVal = commentDraft.trim();
+
+    // 1. Set feedback first (user says submitting grade reloads the page)
+    var feedbackOk = false;
+    if (commentVal) {
+      feedbackOk = setFeedbackInCanvas(commentVal);
+    }
+
+    // 2. Set grade input
+    var gradeOk = false;
+    var gradeInput = findGradeInput();
+    if (gradeInput && gradeVal) {
+      gradeInput.value = gradeVal;
+      gradeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      gradeInput.dispatchEvent(new Event('change', { bubbles: true }));
+      gradeOk = true;
+    }
+
+    // 3. Flash feedback
+    var msg = [];
+    if (feedbackOk && commentVal) msg.push('feedback');
+    if (gradeOk) msg.push('grade');
+    if (msg.length) {
+      flashMsg('Pushed ' + msg.join(' + ') + ' to Canvas');
+    } else if (!gradeVal && !commentVal) {
+      flashMsg('Nothing to push — fill grade and/or comment first');
+    } else if (!feedbackOk && commentVal) {
+      flashMsg('Grade set, but feedback iframe not found');
+    } else {
+      flashMsg('Canvas grade input not found');
+    }
+  }
+
+  var flashTimer = null;
+  function flashMsg(text) {
+    var el = document.getElementById('cv-flash');
+    if (!el) return;
+    el.textContent = text;
+    el.style.opacity = '1';
+    if (flashTimer) clearTimeout(flashTimer);
+    flashTimer = setTimeout(function() {
+      el.style.opacity = '0';
+    }, 2500);
+  }
+
   // ---- skeletons (created once, survive renders) ----
   var skeleton = {
     rows: null,
@@ -421,6 +519,16 @@
     hint.style.cssText = 'font-size:10px;color:#a8a29e;margin-top:4px;';
     hint.innerHTML = 'Click &#8853; next to a variable for comment options';
 
+    var flash = document.createElement('div');
+    flash.id = 'cv-flash';
+    flash.style.cssText = 'font-size:10px;color:#0f766e;margin-top:4px;opacity:0;transition:opacity 0.3s;';
+
+    var pushBtn = document.createElement('button');
+    pushBtn.id = 'cv-push';
+    pushBtn.textContent = 'Push';
+    pushBtn.title = 'Insert draft grade + feedback into Canvas fields';
+    pushBtn.style.cssText = 'padding:4px 10px;background:#0f766e;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;';
+
     var backupBtn = document.createElement('button');
     backupBtn.id = 'cv-backup';
     backupBtn.textContent = 'Backup';
@@ -428,13 +536,16 @@
 
     draftBtns.appendChild(copyBtn);
     draftBtns.appendChild(clearBtn);
+    draftBtns.appendChild(pushBtn);
     draftBtns.appendChild(backupBtn);
     draftFooter.appendChild(skeleton.draftTa);
     draftFooter.appendChild(draftBtns);
     draftFooter.appendChild(hint);
+    draftFooter.appendChild(flash);
     win.appendChild(draftFooter);
 
     backupBtn.addEventListener('click', backupData);
+    pushBtn.addEventListener('click', pushToCanvas);
 
     copyBtn.addEventListener('click', function() {
       var text = skeleton.draftTa.value;
