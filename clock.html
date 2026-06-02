@@ -411,8 +411,9 @@
                             class="card flex-1 rounded-xl px-4 py-2.5 text-sm text-inherit focus:outline-none focus:border-accent transition-colors cursor-pointer">
                         <button id="btn-set-endtime" class="card rounded-xl px-4 py-2.5 text-sm font-medium text-accent hover:border-accent transition-all cursor-pointer">Set</button>
                     </div>
-                    <div class="flex flex-wrap gap-1.5 mt-2">
+                    <div class="flex items-center gap-2 mt-2">
                         <button class="card rounded-lg px-3 py-1.5 text-xs font-medium text-accent hover:border-accent transition-all cursor-pointer" data-quick="now">Now</button>
+                        <span class="text-xs text-muted">⌵</span>
                         <button class="card rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer" data-quick="-5">−5m</button>
                         <button class="card rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer" data-quick="5">+5m</button>
                         <button class="card rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer" data-quick="10">+10m</button>
@@ -420,6 +421,7 @@
                         <button class="card rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer" data-quick="60">+60m</button>
                         <button class="card rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer" data-quick="120">+120m</button>
                     </div>
+                    <button id="btn-round-toggle" class="swatch mt-2" data-round="" style="flex:none;padding:4px 10px;font-size:0.7rem;">Round</button>
                     <button id="btn-clear-endtime" class="mt-2 text-xs text-muted hover:text-red-500 transition-colors cursor-pointer hidden">Clear countdown</button>
                 </div>
 
@@ -770,6 +772,12 @@
             });
             inputCustomText.value = S.customText;
 
+            const roundBtn = $('btn-round-toggle');
+            if (roundBtn) {
+                roundBtn.classList.toggle('active', S.roundToMinute !== false);
+                roundBtn.textContent = S.roundToMinute === false ? 'Round off' : 'Round';
+            }
+
             const colorValEl = $('color-value');
             if (colorValEl) colorValEl.textContent = S.color;
 
@@ -945,25 +953,30 @@
 
         function setQuickEndTime(minutes) {
             const now = accurateNow();
-            // Round to nearest minute
-            now.setSeconds(0, 0);
-            if (minutes === 'now') {
-                // Already rounded above
-            } else {
+            if (S.roundToMinute !== false) {
+                now.setSeconds(0, 0);
+            }
+            if (minutes !== 'now') {
                 now.setMinutes(now.getMinutes() + parseInt(minutes, 10));
             }
-            const iso = now.getFullYear() + '-' +
-                String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                String(now.getDate()).padStart(2, '0') + 'T' +
-                String(now.getHours()).padStart(2, '0') + ':' +
-                String(now.getMinutes()).padStart(2, '0');
-            inputEndTime.value = iso;
+            const pad = n => String(n).padStart(2, '0');
+            const iso = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
+                'T' + pad(now.getHours()) + ':' + pad(now.getMinutes()) +
+                (S.roundToMinute === false ? ':' + pad(now.getSeconds()) : '');
+            inputEndTime.value = S.roundToMinute === false ? iso : iso.slice(0, 16);
             S.endTime = iso;
             save('endTime', iso);
             clearEndTimeBtn.classList.remove('hidden');
             lastAnnouncedMinute = -1;
             countdownEl.classList.remove('hidden');
             countdownEl.style.color = '';
+        }
+
+        function toggleRound() {
+            S.roundToMinute = S.roundToMinute === false ? true : false;
+            const btn = $('btn-round-toggle');
+            btn.classList.toggle('active', S.roundToMinute !== false);
+            btn.textContent = S.roundToMinute === false ? 'Round off' : 'Round';
         }
 
         function handleReset() {
@@ -1087,6 +1100,7 @@
         $('btn-set-endtime').addEventListener('click', handleApplyEndTime);
         $('btn-clear-endtime').addEventListener('click', handleClearEndTime);
         document.querySelectorAll('[data-quick]').forEach(el => el.addEventListener('click', () => setQuickEndTime(el.dataset.quick)));
+        $('btn-round-toggle').addEventListener('click', toggleRound);
         $('btn-reset').addEventListener('click', handleReset);
         $('btn-save-current').addEventListener('click', handleSaveCurrent);
         $('input-text-title').addEventListener('input', e => handleTextTitle(e.target.value));
