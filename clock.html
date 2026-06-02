@@ -268,11 +268,10 @@
 
         <div id="module-time" class="animate-fade-in w-full max-w-full flex justify-center overflow-hidden" role="group" aria-label="Current time">
             <div id="time-el" class="time-digits font-light tracking-tight leading-none flex items-baseline gap-0 tabular-nums select-none size-lg max-w-full">
-                <time id="clock-time" datetime="00:00:00">
+                <time id="clock-time" class="inline-flex items-baseline gap-0" datetime="00:00:00">
                     <span id="hours" class="tabular-nums">00</span><span class="opacity-30 select-none" aria-hidden="true">:</span><span id="minutes" class="tabular-nums">00</span>
                     <span id="seconds-wrap" class="seconds-wrap"><span class="opacity-30 select-none" aria-hidden="true">:</span><span id="seconds" class="tabular-nums">00</span></span>
-                </time>
-                <span id="ampm-el" class="ampm-box opacity-50 font-medium ml-1 align-middle" aria-hidden="true">AM</span>
+                </time><!-- no whitespace --><span id="ampm-el" class="ampm-box opacity-50 font-medium" aria-hidden="true">AM</span>
             </div>
         </div>
 
