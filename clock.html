@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock — tools.javagrant.ac.nz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans:  ['DM Sans', 'system-ui', 'sans-serif'],
+                        mono:  ['Space Mono', 'monospace'],
+                        serif: ['Playfair Display', 'Georgia', 'serif'],
+                    },
+                    colors: {
+                        accent: {
+                            DEFAULT: '#0f766e',
+                            light: '#14b8a6',
+                            lighter: '#5eead4',
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #fafaf9;
+            --bg-card: #ffffff;
+            --text: #1c1917;
+            --text-muted: #78716c;
+            --border: #e7e5e4;
+            --accent: #0f766e;
+            --accent-light: #14b8a6;
+            --clock-color: #14b8a6;
+            --secondary-color: #78716c;
+        }
+        .dark {
+            --bg: #1c1917;
+            --bg-card: #292524;
+            --text: #fafaf9;
+            --text-muted: #a8a29e;
+            --border: #44403c;
+            --accent: #14b8a6;
+            --accent-light: #5eead4;
+            --clock-color: #5eead4;
+            --secondary-color: #a8a29e;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .text-muted { color: var(--text-muted); }
+        .text-accent { color: var(--accent); }
+        .text-accent-light { color: var(--accent-light); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease both; }
+        @keyframes sidebarIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .modal-content { animation: sidebarIn 0.25s ease both; }
+
+        #time-el { color: var(--clock-color); transition: color 0.3s ease; }
+        .time-digits,
+        .time-digits * { user-select: none; -webkit-user-select: none; }
+
+        .size-sm { font-size: clamp(3rem,  8vw,  8rem); }
+        .size-md { font-size: clamp(5rem, 14vw, 13rem); }
+        .size-lg { font-size: clamp(7rem, 20vw, 18rem); }
+        .time-digits .ampm-box { font-size: 0.2em; }
+
+        #custom-text-el { white-space: pre-wrap; }
+
+        .text-size-sm { font-size: 0.9rem; }
+        .text-size-md { font-size: 1.2rem; }
+        .text-size-lg { font-size: 1.7rem; }
+
+        .settings-btn {
+            position: fixed; top: 1.5rem; right: 1.5rem;
+            opacity: 0.3; transition: opacity 0.4s ease;
+        }
+        .settings-btn:hover,
+        .settings-btn:focus-visible { opacity: 1; }
+        .settings-btn.visible { opacity: 1; }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            padding-top: 2px;
+        }
+        .color-swatch {
+            aspect-ratio: 1; width: 100%;
+            border-radius: 10px;
+            cursor: pointer; border: 2px solid var(--border);
+            transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+            position: relative;
+        }
+        .color-swatch:hover { transform: scale(1.08); border-color: var(--accent); }
+        .color-swatch.active {
+            border-color: var(--text);
+            transform: scale(1.05);
+            box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--text);
+        }
+        .color-swatch[data-color="#000000"],
+        .color-swatch[data-color="#ffffff"] {
+            background-image: repeating-conic-gradient(var(--border) 0% 25%, transparent 0% 50%) 50% / 8px 8px;
+        }
+        .color-swatch[data-color="#000000"]::after,
+        .color-swatch[data-color="#ffffff"]::after {
+            content: ''; position: absolute; inset: 2px; border-radius: 8px;
+        }
+        .color-swatch[data-color="#000000"]::after { background: #000; }
+        .color-swatch[data-color="#ffffff"]::after { background: #fff; }
+
+        .swatch {
+            cursor: pointer; border: 2px solid var(--border);
+            border-radius: 8px; padding: 6px 14px;
+            font-size: 0.8rem; font-weight: 500; color: var(--text-muted);
+            transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+            background: none; flex: 1; text-align: center;
+        }
+        .swatch:hover { border-color: var(--accent); color: var(--accent); }
+        .swatch.active { border-color: var(--accent); background-color: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+
+        .toggle-track {
+            width: 40px; height: 22px; border-radius: 11px;
+            background-color: var(--border); position: relative; cursor: pointer;
+            transition: background-color 0.2s; flex-shrink: 0;
+        }
+        .toggle-track.on { background-color: var(--accent); }
+        .toggle-thumb {
+            position: absolute; top: 3px; left: 3px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: white; transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle-track.on .toggle-thumb { transform: translateX(18px); }
+
+        #settings-modal {
+            box-shadow: -4px 0 32px rgba(0,0,0,0.12);
+        }
+
+        .module-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid var(--border);
+        }
+        .module-row:last-child { border-bottom: none; }
+        .module-row .module-info { flex: 1; min-width: 0; }
+        .module-row .module-info label { display: block; font-size: 0.875rem; font-weight: 500; }
+        .module-row .module-info p { font-size: 0.75rem; color: var(--text-muted); margin-top: 1px; }
+
+        /* Skip link */
+        .skip-link {
+            position: fixed; top: -100%; left: 1rem; z-index: 9999;
+            background: var(--accent); color: white; padding: 0.5rem 1rem;
+            border-radius: 0 0 8px 8px; font-size: 0.875rem; font-weight: 600;
+            text-decoration: none; transition: top 0.15s;
+        }
+        .skip-link:focus { top: 0; }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .modal-content { animation: none; }
+            .animate-fade-in { animation: none; opacity: 1; transform: none; }
+            .settings-btn { transition: none; }
+        }
+
+        /* High contrast mode */
+        @media (forced-colors: active) {
+            .color-swatch.active { border-color: Highlight; }
+            .swatch.active { border-color: Highlight; }
+            .toggle-track.on { background-color: Highlight; }
+        }
+
+        /* Countdown expired animation */
+        @keyframes pulseExpired {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .countdown-expired {
+            animation: pulseExpired 1s ease-in-out 3;
+            color: #ef4444 !important;
+        }
+
+        /* Burn-in protection - subtle periodic shift */
+        body::after {
+            content: '';
+            position: fixed; inset: 0; pointer-events: none; z-index: 9998;
+            animation: burninShift 120s ease-in-out infinite;
+        }
+        @keyframes burninShift {
+            0%, 95% { transform: translate(0, 0); }
+            97% { transform: translate(1px, 1px); }
+            100% { transform: translate(0, 0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body::after { animation: none; }
+        }
+
+        /* Focus visible */
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Overdue display */
+        #overdue-el {
+            color: #ef4444;
+            font-size: clamp(1rem, 3vw, 2rem);
+            font-weight: 600;
+        }
+    </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230f766e' width='100' height='100' rx='20'/><text y='.9em' x='50%' text-anchor='middle' font-size='70'>⏱</text></svg>">
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+    <a href="#clock-area" class="skip-link">Skip to clock</a>
+
+    <button id="open-settings"
+        class="settings-btn card rounded-xl p-2.5 text-muted hover:text-accent transition-colors animate-fade-in z-10 cursor-pointer"
+        title="Settings (S)"
+        aria-label="Open settings"
+        aria-expanded="false"
+        aria-controls="settings-modal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+    </button>
+
+    <a href="index.html" class="fixed top-6 left-6 flex items-center gap-2 text-muted hover:text-accent text-sm font-medium no-underline transition-colors animate-fade-in z-10" aria-label="Back to tools">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back
+    </a>
+
+    <div id="clock-area" role="application" aria-label="Exam clock" class="min-h-screen flex flex-col items-center justify-center gap-4 px-6 py-16">
+        <div id="custom-text-el" class="text-center max-w-2xl mx-auto leading-snug text-size-md animate-fade-in hidden">
+            <div id="custom-title-el" class="text-sm font-semibold mb-0.5" style="color: var(--secondary-color);"></div>
+            <div id="custom-body-el" class="text-muted" style="color: var(--secondary-color);"></div>
+        </div>
+
+        <div id="module-time" class="animate-fade-in w-full flex justify-center" role="group" aria-label="Current time">
+            <div id="time-el" class="time-digits font-light tracking-tight leading-none flex items-baseline gap-0 tabular-nums select-none size-lg">
+                <time id="clock-time" datetime="00:00:00">
+                    <span id="hours" class="tabular-nums">00</span><span class="opacity-30 select-none" aria-hidden="true">:</span><span id="minutes" class="tabular-nums">00</span>
+                    <span id="seconds-wrap" class="seconds-wrap"><span class="opacity-30 select-none" aria-hidden="true">:</span><span id="seconds" class="tabular-nums">00</span></span>
+                </time>
+                <span id="ampm-el" class="ampm-box opacity-50 font-medium ml-1 align-middle" aria-hidden="true">AM</span>
+            </div>
+        </div>
+
+        <div id="overdue-el" class="hidden" role="status" aria-live="assertive"></div>
+
+        <div id="module-countdown" class="animate-fade-in hidden">
+            <div id="countdown-el"
+                class="text-5xl md:text-7xl font-light tracking-tight tabular-nums"
+                role="timer"
+                aria-live="polite"
+                aria-valuemin="0"
+                aria-valuenow="0"
+                aria-valuetext="Countdown not set">
+            </div>
+        </div>
+
+        <div id="module-date" class="animate-fade-in hidden">
+            <time id="date-el" class="text-2xl md:text-3xl text-muted transition-opacity duration-300">Loading...</time>
+        </div>
+
+        <div id="module-tz" class="animate-fade-in hidden">
+            <div id="tz-el" class="text-base text-muted opacity-50 transition-opacity duration-300"></div>
+        </div>
+    </div>
+
+    <div id="time-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <aside id="settings-modal"
+        class="fixed inset-y-0 right-0 z-50 w-80 hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Clock settings"
+        aria-hidden="true">
+        <div id="settings-card" class="card rounded-l-2xl p-6 h-full modal-content overflow-y-auto flex flex-col gap-5">
+
+            <div class="flex items-center justify-between shrink-0">
+                <h2 class="text-lg font-semibold" id="settings-heading">Settings</h2>
+                <div class="flex items-center gap-2">
+                    <button id="btn-reset" class="text-xs text-muted hover:text-red-500 transition-colors px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">Reset</button>
+                    <button id="btn-save-current" class="text-xs text-muted hover:text-accent transition-colors px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">Save</button>
+                    <button id="close-settings"
+                        class="text-muted hover:text-accent transition-colors p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+                        aria-label="Close settings">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-5">
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-3" id="theme-label">Theme</label>
+                    <div class="flex gap-2" role="radiogroup" aria-labelledby="theme-label">
+                        <button class="swatch flex-1" data-theme="auto" role="radio" aria-checked="true">Auto</button>
+                        <button class="swatch flex-1" data-theme="light" role="radio" aria-checked="false">Light</button>
+                        <button class="swatch flex-1" data-theme="dark" role="radio" aria-checked="false">Dark</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-3">Presets</label>
+                    <div class="flex gap-2 mb-2">
+                        <input id="input-preset-name" type="text" placeholder="Preset name"
+                            class="card flex-1 rounded-xl px-3 py-2 text-sm text-inherit placeholder:text-[var(--text-muted)] focus:outline-none focus:border-accent transition-colors">
+                        <button id="btn-save-preset" class="card rounded-xl px-3 py-2 text-sm font-medium text-accent hover:border-accent transition-all cursor-pointer">Save</button>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <select id="select-preset" class="card flex-1 rounded-xl px-3 py-2 text-sm text-inherit bg-transparent focus:outline-none focus:border-accent transition-colors cursor-pointer" aria-label="Select a preset">
+                            <option value="">Select a preset...</option>
+                        </select>
+                        <button id="btn-load-preset" class="card rounded-xl px-3 py-2 text-sm font-medium text-accent hover:border-accent transition-all cursor-pointer">Load</button>
+                        <button id="btn-delete-preset" class="card rounded-xl px-3 py-2 text-sm font-medium text-red-500 hover:border-red-500 transition-all cursor-pointer hidden">Delete</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-3">Displays</label>
+                    <div class="space-y-1">
+                        <div class="module-row">
+                            <div class="module-info"><label for="toggle-showTime">Time</label><p>Hours, minutes, seconds</p></div>
+                            <button class="toggle-track on" data-toggle="showTime" id="toggle-showTime" role="switch" aria-checked="true" aria-label="Toggle time display"><div class="toggle-thumb"></div></button>
+                        </div>
+                        <div class="module-row" style="padding-left:1.5rem;">
+                            <div class="module-info"><label class="text-sm">Size</label></div>
+                            <div class="flex gap-1">
+                                <button class="swatch" data-size="sm">S</button>
+                                <button class="swatch" data-size="md">M</button>
+                                <button class="swatch active" data-size="lg">L</button>
+                            </div>
+                        </div>
+                        <div class="module-row" style="padding-left:1.5rem; flex-direction: column; align-items: stretch; gap: 8px;">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm">Color</label>
+                                <span id="color-value" class="text-xs text-muted font-mono">#14b8a6</span>
+                            </div>
+                            <div class="color-grid" role="radiogroup" aria-label="Clock color">
+                                <button class="color-swatch active" data-color="#14b8a6" aria-label="Teal" role="radio" aria-checked="true" style="background:#14b8a6"></button>
+                                <button class="color-swatch" data-color="#ef4444" aria-label="Red" role="radio" aria-checked="false" style="background:#ef4444"></button>
+                                <button class="color-swatch" data-color="#3b82f6" aria-label="Blue" role="radio" aria-checked="false" style="background:#3b82f6"></button>
+                                <button class="color-swatch" data-color="#f59e0b" aria-label="Amber" role="radio" aria-checked="false" style="background:#f59e0b"></button>
+                                <button class="color-swatch" data-color="#8b5cf6" aria-label="Purple" role="radio" aria-checked="false" style="background:#8b5cf6"></button>
+                                <button class="color-swatch" data-color="#10b981" aria-label="Emerald" role="radio" aria-checked="false" style="background:#10b981"></button>
+                                <button class="color-swatch" data-color="#f97316" aria-label="Orange" role="radio" aria-checked="false" style="background:#f97316"></button>
+                                <button class="color-swatch" data-color="#ec4899" aria-label="Pink" role="radio" aria-checked="false" style="background:#ec4899"></button>
+                                <button class="color-swatch" data-color="#000000" aria-label="Black" role="radio" aria-checked="false" style="background:#000000"></button>
+                                <button class="color-swatch" data-color="#ffffff" aria-label="White" role="radio" aria-checked="false" style="background:#ffffff"></button>
+                            </div>
+                        </div>
+                        <div class="module-row" style="padding-left:1.5rem;">
+                            <div class="module-info"><label for="toggle-showSeconds" class="text-sm">Include seconds</label></div>
+                            <button class="toggle-track on" data-toggle="showSeconds" id="toggle-showSeconds" role="switch" aria-checked="true" aria-label="Toggle seconds display"><div class="toggle-thumb"></div></button>
+                        </div>
+                        <div class="module-row" style="padding-left:1.5rem;">
+                            <div class="module-info"><label for="toggle-use24h" class="text-sm">24-hour format</label></div>
+                            <button class="toggle-track" data-toggle="use24h" id="toggle-use24h" role="switch" aria-checked="false" aria-label="Toggle 24-hour format"><div class="toggle-thumb"></div></button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info"><label for="toggle-showDate">Date</label><p>Current date</p></div>
+                            <button class="toggle-track on" data-toggle="showDate" id="toggle-showDate" role="switch" aria-checked="true" aria-label="Toggle date display"><div class="toggle-thumb"></div></button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info"><label for="toggle-showTz">Timezone</label><p>UTC offset display</p></div>
+                            <button class="toggle-track on" data-toggle="showTz" id="toggle-showTz" role="switch" aria-checked="true" aria-label="Toggle timezone display"><div class="toggle-thumb"></div></button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info"><label for="toggle-showCountdown">Countdown</label><p>Countdown to a set time</p></div>
+                            <button class="toggle-track" data-toggle="showCountdown" id="toggle-showCountdown" role="switch" aria-checked="false" aria-label="Toggle countdown display"><div class="toggle-thumb"></div></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="countdown-config" class="hidden">
+                    <div class="flex gap-3">
+                        <input id="input-end-time" type="datetime-local"
+                            class="card flex-1 rounded-xl px-4 py-2.5 text-sm text-inherit focus:outline-none focus:border-accent transition-colors cursor-pointer">
+                        <button id="btn-set-endtime" class="card rounded-xl px-4 py-2.5 text-sm font-medium text-accent hover:border-accent transition-all cursor-pointer">Set</button>
+                    </div>
+                    <button id="btn-clear-endtime" class="mt-2 text-xs text-muted hover:text-red-500 transition-colors cursor-pointer hidden">Clear countdown</button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-3">Custom Text</label>
+                    <input id="input-text-title" type="text" placeholder="Title (optional)"
+                        class="card w-full rounded-xl px-4 py-2 mb-2 text-sm text-inherit placeholder:text-[var(--text-muted)] focus:outline-none focus:border-accent transition-colors">
+                    <textarea id="input-custom-text" rows="2" placeholder="Lines of text..."
+                        class="card w-full rounded-xl px-4 py-3 text-sm text-inherit placeholder:text-[var(--text-muted)] resize-none focus:outline-none focus:border-accent transition-colors"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-3">Text Size</label>
+                    <div class="flex gap-2">
+                        <button class="swatch" data-textsize="sm">Small</button>
+                        <button class="swatch active" data-textsize="md">Medium</button>
+                        <button class="swatch" data-textsize="lg">Large</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-3">Secondary Color</label>
+                    <p class="text-xs text-muted mb-2">Date, timezone, custom text</p>
+                    <div class="flex gap-2 mb-3">
+                        <button class="swatch flex-1 active" data-secondarycolor="auto">Auto</button>
+                    </div>
+                    <div class="color-grid" role="radiogroup" aria-label="Secondary color">
+                        <button class="color-swatch" data-secondarycolor="#14b8a6" aria-label="Teal secondary" role="radio" aria-checked="false" style="background:#14b8a6"></button>
+                        <button class="color-swatch" data-secondarycolor="#ef4444" aria-label="Red secondary" role="radio" aria-checked="false" style="background:#ef4444"></button>
+                        <button class="color-swatch" data-secondarycolor="#3b82f6" aria-label="Blue secondary" role="radio" aria-checked="false" style="background:#3b82f6"></button>
+                        <button class="color-swatch" data-secondarycolor="#f59e0b" aria-label="Amber secondary" role="radio" aria-checked="false" style="background:#f59e0b"></button>
+                        <button class="color-swatch" data-secondarycolor="#8b5cf6" aria-label="Purple secondary" role="radio" aria-checked="false" style="background:#8b5cf6"></button>
+                        <button class="color-swatch" data-secondarycolor="#10b981" aria-label="Emerald secondary" role="radio" aria-checked="false" style="background:#10b981"></button>
+                        <button class="color-swatch" data-secondarycolor="#f97316" aria-label="Orange secondary" role="radio" aria-checked="false" style="background:#f97316"></button>
+                        <button class="color-swatch" data-secondarycolor="#ec4899" aria-label="Pink secondary" role="radio" aria-checked="false" style="background:#ec4899"></button>
+                        <button class="color-swatch" data-secondarycolor="#000000" aria-label="Black secondary" role="radio" aria-checked="false" style="background:#000000"></button>
+                        <button class="color-swatch" data-secondarycolor="#ffffff" aria-label="White secondary" role="radio" aria-checked="false" style="background:#ffffff"></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-3">Font</label>
+                    <div class="flex gap-2 flex-wrap">
+                        <button class="swatch active" data-font="sans" style="font-family: DM Sans, system-ui">Sans</button>
+                        <button class="swatch" data-font="mono" style="font-family: Space Mono, monospace">Mono</button>
+                        <button class="swatch" data-font="serif" style="font-family: Playfair Display, Georgia, serif">Serif</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </aside>
+
+    <script>
+    (() => {
+        // ─── Constants ─────────────────────────────────────────────────────────
+        const NS = 'clock';
+        const $ = id => document.getElementById(id);
+        const DEFAULTS = {
+            showTime: true, showDate: true, showTz: true, showCountdown: false,
+            showSeconds: true, use24h: false,
+            color: '#14b8a6', font: 'sans', size: 'lg', textSize: 'md',
+            theme: 'auto', secondaryColor: 'auto', customText: '', textTitle: '', endTime: null,
+        };
+        const PRESETS_KEY = 'clock-presets';
+        const MINUTE_MS = 60000;
+        let wakeLockSentinel = null;
+
+        // ─── URL helpers ───────────────────────────────────────────────────────
+        function getParams() { return new URLSearchParams(window.location.search); }
+        function qKey(key) { return `${NS}:${key}`; }
+
+        function setParam(key, val) {
+            const p = getParams();
+            if (val === null || val === false || val === '' || val === undefined) { p.delete(qKey(key)); }
+            else { p.set(qKey(key), val); }
+            const qs = p.toString();
+            history.replaceState({}, '', qs ? `${location.pathname}?${qs}` : location.pathname);
+        }
+
+        function clearParams() {
+            history.replaceState({}, '', location.pathname);
+        }
+
+        function parseUrlParams() {
+            const p = getParams();
+            const out = {};
+            const map = {
+                time:'showTime', date:'showDate', tz:'showTz', countdown:'showCountdown',
+                seconds:'showSeconds', '24h':'use24h', color:'color', font:'font',
+                size:'size', textSize:'textSize', theme:'theme', secondaryColor:'secondaryColor',
+                textTitle:'textTitle', text:'customText', endTime:'endTime',
+            };
+            for (const [urlKey, stateKey] of Object.entries(map)) {
+                const q = qKey(urlKey);
+                const raw = p.get(q);
+                if (raw === null || raw === '') continue;
+                const def = DEFAULTS[stateKey];
+                if (typeof def === 'boolean') {
+                    out[stateKey] = raw === '1' || raw === 'true';
+                } else if (typeof def === 'string' && def.startsWith('#')) {
+                    if (/^#[0-9a-fA-F]{6}$/.test(raw)) out[stateKey] = raw;
+                } else if (stateKey === 'endTime') {
+                    // Validate ISO datetime format
+                    if (raw && !isNaN(Date.parse(raw))) out[stateKey] = raw;
+                } else {
+                    out[stateKey] = raw;
+                }
+            }
+            return out;
+        }
+
+        // ─── State ──────────────────────────────────────────────────────────────
+        const S = { ...DEFAULTS };
+        let lastAnnouncedMinute = -1;
+
+        function save(key, val) {
+            S[key] = val;
+            const map = {
+                showTime:'time', showDate:'date', showTz:'tz', showCountdown:'countdown',
+                showSeconds:'seconds', use24h:'24h', color:'color', font:'font',
+                size:'size', textSize:'textSize', theme:'theme',
+                secondaryColor:'secondaryColor', textTitle:'textTitle',
+                customText:'text', endTime:'endTime',
+            };
+            if (map[key]) setParam(map[key][0], val);
+            // Wake lock for active countdown
+            if (key === 'showCountdown' || key === 'endTime') {
+                updateWakeLock();
+            }
+        }
+
+        // ─── Screen Wake Lock ──────────────────────────────────────────────────
+        async function updateWakeLock() {
+            const shouldLock = S.showCountdown && S.endTime;
+            if (shouldLock && !wakeLockSentinel && 'wakeLock' in navigator) {
+                try {
+                    wakeLockSentinel = await navigator.wakeLock.request('display');
+                    wakeLockSentinel.addEventListener('release', () => { wakeLockSentinel = null; });
+                } catch {}
+            } else if (!shouldLock && wakeLockSentinel) {
+                try { wakeLockSentinel.release(); } catch {}
+                wakeLockSentinel = null;
+            }
+        }
+
+        // ─── Timing ────────────────────────────────────────────────────────────
+        let perfAtInit = performance.now();
+        let epochAtInit = Date.now();
+        let tickTimer = null;
+
+        function accurateNow() {
+            return new Date(epochAtInit + (performance.now() - perfAtInit));
+        }
+
+        function scheduleNextTick() {
+            const elapsed = performance.now() - perfAtInit;
+            const nextMs = 1000 - (elapsed % 1000);
+            tickTimer = setTimeout(doTick, nextMs);
+        }
+
+        function doTick() {
+            updateTime();
+            scheduleNextTick();
+        }
+
+        // ─── Presets ───────────────────────────────────────────────────────────
+        const presetSelect = $('select-preset');
+        const presetNameInput = $('input-preset-name');
+        const deletePresetBtn = $('btn-delete-preset');
+
+        function getPresets() {
+            try {
+                const raw = localStorage.getItem(PRESETS_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch { return {}; }
+        }
+
+        function savePreset(name) {
+            if (!name) return;
+            const presets = getPresets();
+            presets[name] = { ...S };
+            try { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); } catch {}
+            populatePresetSelect(name);
+        }
+
+        function loadPreset(name) {
+            const presets = getPresets();
+            if (!presets[name]) return;
+            Object.assign(S, presets[name]);
+            applyAll();
+        }
+
+        function deletePreset(name) {
+            const presets = getPresets();
+            delete presets[name];
+            try { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); } catch {}
+            populatePresetSelect();
+            presetNameInput.value = '';
+            deletePresetBtn.classList.add('hidden');
+        }
+
+        function populatePresetSelect(selected) {
+            const presets = getPresets();
+            const names = Object.keys(presets).sort();
+            presetSelect.innerHTML = '<option value="">Select a preset...</option>' +
+                names.map(n => `<option value="${n}">${n}</option>`).join('');
+            if (selected && names.includes(selected)) {
+                presetSelect.value = selected;
+                deletePresetBtn.classList.remove('hidden');
+            } else {
+                presetSelect.value = '';
+                deletePresetBtn.classList.add('hidden');
+            }
+        }
+
+        // ─── DOM refs ──────────────────────────────────────────────────────────
+        const timeEl      = $('time-el');
+        const clockTimeEl = $('clock-time');
+        const hoursEl     = $('hours');
+        const minutesEl   = $('minutes');
+        const secondsEl   = $('seconds');
+        const secondsWrap = $('seconds-wrap');
+        const ampmEl      = $('ampm-el');
+        const dateEl      = $('date-el');
+        const tzEl        = $('tz-el');
+        const countdownEl = $('countdown-el');
+        const customTextEl= $('custom-text-el');
+        const modal       = $('settings-modal');
+        const countdownConfig = $('countdown-config');
+        const inputEndTime = $('input-end-time');
+        const clearEndTimeBtn = $('btn-clear-endtime');
+        const inputCustomText = $('input-custom-text');
+        const announcer   = $('time-announcer');
+        const overdueEl   = $('overdue-el');
+        const settingsBtn = $('open-settings');
+
+        // ─── Theme ──────────────────────────────────────────────────────────────
+        function getPreferredTheme() {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function setThemeClass(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else if (theme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.toggle('dark', getPreferredTheme() === 'dark');
+            }
+        }
+
+        function applyTheme() {
+            setThemeClass(S.theme);
+        }
+
+        // ─── Color helpers ──────────────────────────────────────────────────────
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1,3),16);
+            const g = parseInt(hex.slice(3,5),16);
+            const b = parseInt(hex.slice(5,7),16);
+            return [r,g,b];
+        }
+        function rgbToHex(r,g,b) {
+            return '#' + [r,g,b].map(v => Math.min(255,Math.max(0,v)).toString(16).padStart(2,'0')).join('');
+        }
+        function lightenHex(hex, amount) {
+            const [r,g,b] = hexToRgb(hex);
+            return rgbToHex(r+amount, g+amount, b+amount);
+        }
+        function mutedHex(hex) {
+            const [r,g,b] = hexToRgb(hex);
+            const gray = (r+g+b)/3;
+            return rgbToHex(r*0.6+gray*0.4, g*0.6+gray*0.4, b*0.6+gray*0.4);
+        }
+
+        function applySecondaryColor() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (S.secondaryColor === 'auto') {
+                const base = S.color;
+                if (isDark) {
+                    document.documentElement.style.setProperty('--secondary-color', lightenHex(base, 40));
+                } else {
+                    document.documentElement.style.setProperty('--secondary-color', mutedHex(base));
+                }
+            } else {
+                document.documentElement.style.setProperty('--secondary-color', S.secondaryColor);
+            }
+        }
+
+        // ─── Rendering ──────────────────────────────────────────────────────────
+        function applyAll() {
+            applyTheme();
+            document.documentElement.style.setProperty('--clock-color', S.color);
+            applySecondaryColor();
+
+            const fontMap = { sans:'DM Sans,system-ui,sans-serif', mono:'Space Mono,monospace', serif:'Playfair Display,Georgia,serif' };
+            timeEl.style.fontFamily = fontMap[S.font] || fontMap.sans;
+
+            $('module-time').classList.toggle('hidden', !S.showTime);
+            $('module-date').classList.toggle('hidden', !S.showDate);
+            $('module-tz').classList.toggle('hidden', !S.showTz);
+            $('module-countdown').classList.toggle('hidden', !S.showCountdown);
+
+            if (secondsWrap) secondsWrap.style.display = S.showSeconds ? '' : 'none';
+
+            if (!S.use24h && S.showTime) { ampmEl.classList.remove('hidden'); }
+            else { ampmEl.classList.add('hidden'); }
+
+            if (S.customText || S.textTitle) {
+                customTextEl.classList.remove('hidden');
+                $('custom-title-el').textContent = S.textTitle || '';
+                $('custom-body-el').textContent = S.customText || '';
+            } else {
+                customTextEl.classList.add('hidden');
+            }
+
+            countdownConfig.classList.toggle('hidden', !S.showCountdown);
+            if (S.endTime) {
+                inputEndTime.value = S.endTime;
+                clearEndTimeBtn.classList.remove('hidden');
+            } else {
+                clearEndTimeBtn.classList.add('hidden');
+            }
+
+            // Toggle states
+            ['showTime','showDate','showTz','showCountdown','showSeconds','use24h'].forEach(k => {
+                const el = document.querySelector(`[data-toggle="${k}"]`);
+                if (el) {
+                    el.classList.toggle('on', S[k]);
+                    el.setAttribute('aria-checked', S[k]);
+                }
+            });
+
+            // Swatch states
+            document.querySelectorAll('.color-swatch').forEach(s => {
+                const isActive = s.dataset.color === S.color || s.dataset.secondarycolor === S.secondaryColor;
+                s.classList.toggle('active', isActive);
+                if (s.getAttribute('role') === 'radio') s.setAttribute('aria-checked', isActive);
+            });
+            document.querySelectorAll('[data-font]').forEach(s => s.classList.toggle('active', s.dataset.font === S.font));
+            document.querySelectorAll('[data-size]').forEach(s => s.classList.toggle('active', s.dataset.size === S.size));
+            document.querySelectorAll('[data-textsize]').forEach(s => s.classList.toggle('active', s.dataset.textsize === S.textSize));
+            document.querySelectorAll('[data-theme]').forEach(s => {
+                const isActive = s.dataset.theme === S.theme;
+                s.classList.toggle('active', isActive);
+                if (s.getAttribute('role') === 'radio') s.setAttribute('aria-checked', isActive);
+            });
+            inputCustomText.value = S.customText;
+
+            const colorValEl = $('color-value');
+            if (colorValEl) colorValEl.textContent = S.color;
+
+            timeEl.className = `time-digits font-light tracking-tight leading-none flex items-baseline gap-0 tabular-nums select-none size-${S.size}`;
+            customTextEl.className = `text-center max-w-2xl mx-auto leading-relaxed text-muted text-size-${S.textSize} animate-fade-in`;
+
+            updateWakeLock();
+        }
+
+        // ─── Clock tick ─────────────────────────────────────────────────────────
+        function updateTime() {
+            const now = accurateNow();
+
+            if (S.showTime) {
+                let h = now.getHours();
+                if (!S.use24h) {
+                    h = h % 12 || 12;
+                    ampmEl.textContent = now.getHours() >= 12 ? 'PM' : 'AM';
+                    ampmEl.classList.remove('hidden');
+                } else {
+                    ampmEl.classList.add('hidden');
+                }
+                hoursEl.textContent = String(h).padStart(2, '0');
+                minutesEl.textContent = String(now.getMinutes()).padStart(2, '0');
+                secondsEl.textContent = String(now.getSeconds()).padStart(2, '0');
+
+                // Update datetime attribute on <time>
+                const iso = now.getHours().toString().padStart(2,'0') + ':' +
+                            now.getMinutes().toString().padStart(2,'0') + ':' +
+                            now.getSeconds().toString().padStart(2,'0');
+                clockTimeEl.setAttribute('datetime', iso);
+
+                // Screen reader announcement on minute change
+                const minuteKey = now.getHours() * 60 + now.getMinutes();
+                if (minuteKey !== lastAnnouncedMinute) {
+                    lastAnnouncedMinute = minuteKey;
+                    const hourStr = S.use24h
+                        ? String(now.getHours()).padStart(2,'0')
+                        : `${now.getHours() % 12 || 12} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+                    announcer.textContent = `The time is ${hourStr}:${String(now.getMinutes()).padStart(2,'0')}`;
+                }
+            }
+
+            if (S.showDate) {
+                dateEl.textContent = now.toLocaleDateString('en-NZ', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+                dateEl.setAttribute('datetime', now.toISOString().slice(0,10));
+            }
+
+            if (S.showTz) {
+                const parts = now.toLocaleTimeString('en-NZ', { timeZoneName:'short' }).split(' ');
+                tzEl.textContent = parts.slice(2).join(' ') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+            }
+
+            if (S.showCountdown && S.endTime) {
+                const target = new Date(S.endTime);
+                const diff = target - now;
+                const overdue = diff < 0;
+
+                countdownEl.classList.remove('hidden');
+                countdownEl.classList.remove('countdown-expired');
+                overdueEl.classList.remove('hidden');
+
+                if (overdue) {
+                    const elapsed = Math.abs(diff);
+                    const tot = Math.floor(elapsed / 1000);
+                    const h = Math.floor(tot / 3600);
+                    const m = Math.floor((tot % 3600) / 60);
+                    const s = tot % 60;
+
+                    countdownEl.textContent = "Time's up!";
+                    countdownEl.classList.add('countdown-expired');
+                    countdownEl.setAttribute('aria-valuetext', `Time is up. Overdue by ${h > 0 ? h + ' hours ' : ''}${m} minutes ${s} seconds`);
+
+                    overdueEl.textContent = `+${h > 0 ? h + 'h ' : ''}${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+
+                    // Announce time's up once
+                    if (lastAnnouncedMinute !== -2) {
+                        announcer.textContent = 'Time is up! The countdown has expired.';
+                        lastAnnouncedMinute = -2;
+                    }
+                } else {
+                    const tot = Math.floor(diff / 1000);
+                    const cd = { h: Math.floor(tot/3600), m: Math.floor((tot%3600)/60), s: tot%60 };
+                    const parts = [];
+                    if (cd.h > 0) parts.push(`${cd.h}h`);
+                    parts.push(`${String(cd.m).padStart(2,'0')}m`);
+                    parts.push(`${String(cd.s).padStart(2,'0')}s`);
+
+                    const displayText = parts.join(' ');
+                    countdownEl.textContent = displayText;
+                    countdownEl.style.color = diff < 60000 ? '#ef4444' : diff < 300000 ? '#f59e0b' : 'var(--clock-color)';
+                    countdownEl.setAttribute('aria-valuenow', Math.floor(diff / 1000));
+                    countdownEl.setAttribute('aria-valuetext', `${cd.h > 0 ? cd.h + ' hours ' : ''}${cd.m} minutes ${cd.s} seconds remaining`);
+
+                    overdueEl.classList.add('hidden');
+                    overdueEl.textContent = '';
+
+                    // Announce thresholds
+                    const totMin = Math.floor(diff / 60000);
+                    if (totMin === 5 && lastAnnouncedMinute !== -3) {
+                        announcer.textContent = '5 minutes remaining';
+                        lastAnnouncedMinute = -3;
+                    } else if (totMin === 1 && lastAnnouncedMinute !== -4) {
+                        announcer.textContent = '1 minute remaining';
+                        lastAnnouncedMinute = -4;
+                    } else if (totMin === 0 && cd.s === 30 && lastAnnouncedMinute !== -5) {
+                        announcer.textContent = '30 seconds remaining';
+                        lastAnnouncedMinute = -5;
+                    }
+                }
+            } else {
+                countdownEl.classList.add('hidden');
+                overdueEl.classList.add('hidden');
+                overdueEl.textContent = '';
+                countdownEl.textContent = '';
+                if (S.showCountdown) {
+                    countdownEl.setAttribute('aria-valuetext', 'Countdown not set');
+                }
+            }
+        }
+
+        // ─── Handlers ───────────────────────────────────────────────────────────
+        function handleToggle(key) {
+            save(key, !S[key]);
+            applyAll();
+        }
+
+        function handleColor(color) {
+            save('color', color);
+            document.documentElement.style.setProperty('--clock-color', color);
+            applySecondaryColor();
+            const valEl = $('color-value');
+            if (valEl) valEl.textContent = color;
+        }
+
+        function handleFont(font) { save('font', font); applyAll(); }
+        function handleSize(size) { save('size', size); applyAll(); }
+        function handleTextSize(textSize) { save('textSize', textSize); applyAll(); }
+
+        function handleTheme(theme) {
+            save('theme', theme);
+            applyTheme();
+            applySecondaryColor();
+        }
+
+        function handleSecondaryColor(val) {
+            save('secondaryColor', val);
+            applySecondaryColor();
+            applyAll();
+        }
+
+        function handleCustomText(val) { save('customText', val); applyAll(); }
+        function handleTextTitle(val) { save('textTitle', val); applyAll(); }
+
+        function handleApplyEndTime() {
+            const val = inputEndTime.value || null;
+            save('endTime', val);
+            clearEndTimeBtn.classList.toggle('hidden', !val);
+            if (val) lastAnnouncedMinute = -1;
+        }
+
+        function handleClearEndTime() {
+            save('endTime', null);
+            inputEndTime.value = '';
+            clearEndTimeBtn.classList.add('hidden');
+            countdownEl.classList.add('hidden');
+            countdownEl.textContent = '';
+            overdueEl.classList.add('hidden');
+            overdueEl.textContent = '';
+            countdownEl.classList.remove('countdown-expired');
+            countdownEl.style.color = '';
+        }
+
+        function handleReset() {
+            if (!confirm('Reset all settings to defaults?')) return;
+            Object.assign(S, { ...DEFAULTS });
+            clearParams();
+            try { localStorage.removeItem('clock:last'); } catch {}
+            lastAnnouncedMinute = -1;
+            applyAll();
+        }
+
+        function handleSaveCurrent() {
+            try {
+                localStorage.setItem('clock:last', JSON.stringify(S));
+                localStorage.setItem('clock:lastURL', location.href);
+            } catch {}
+            const btn = $('btn-save-current');
+            btn.textContent = 'Saved!';
+            setTimeout(() => { btn.textContent = 'Save'; }, 1500);
+        }
+
+        // ─── Settings sidebar ───────────────────────────────────────────────────
+        let lastFocusBeforeSettings = null;
+        const FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+        function openSettings() {
+            lastFocusBeforeSettings = document.activeElement;
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            settingsBtn.setAttribute('aria-expanded', 'true');
+
+            requestAnimationFrame(() => {
+                const first = modal.querySelector(FOCUSABLE_SELECTOR);
+                if (first) first.focus();
+            });
+        }
+
+        function closeSettings() {
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            settingsBtn.setAttribute('aria-expanded', 'false');
+
+            if (lastFocusBeforeSettings) {
+                lastFocusBeforeSettings.focus();
+                lastFocusBeforeSettings = null;
+            }
+        }
+
+        function trapFocus(e) {
+            if (modal.classList.contains('hidden')) return;
+            const focusable = modal.querySelectorAll(FOCUSABLE_SELECTOR);
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+        }
+
+        // ─── Settings gear auto-hide ────────────────────────────────────────────
+        let idleTimer = null;
+        function showSettingsBtn() {
+            settingsBtn.classList.add('visible');
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                if (modal.classList.contains('hidden')) {
+                    settingsBtn.classList.remove('visible');
+                }
+            }, 5000);
+        }
+
+        // ─── Event bindings ────────────────────────────────────────────────────
+        $('open-settings').addEventListener('click', openSettings);
+        $('close-settings').addEventListener('click', closeSettings);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeSettings();
+                return;
+            }
+            if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                if (modal.classList.contains('hidden')) openSettings();
+                else closeSettings();
+            }
+            if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                } else {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+            }
+        });
+        document.addEventListener('keydown', trapFocus);
+
+        document.querySelectorAll('.color-swatch').forEach(s => {
+            s.addEventListener('click', () => {
+                if (s.dataset.color) handleColor(s.dataset.color);
+                if (s.dataset.secondarycolor) handleSecondaryColor(s.dataset.secondarycolor);
+            });
+        });
+        document.querySelectorAll('[data-font]').forEach(s => s.addEventListener('click', () => handleFont(s.dataset.font)));
+        document.querySelectorAll('[data-size]').forEach(s => s.addEventListener('click', () => handleSize(s.dataset.size)));
+        document.querySelectorAll('[data-textsize]').forEach(s => s.addEventListener('click', () => handleTextSize(s.dataset.textsize)));
+        document.querySelectorAll('[data-theme]').forEach(s => s.addEventListener('click', () => handleTheme(s.dataset.theme)));
+        document.querySelectorAll('[data-toggle]').forEach(el => el.addEventListener('click', () => handleToggle(el.dataset.toggle)));
+
+        inputCustomText.addEventListener('input', e => handleCustomText(e.target.value));
+        $('btn-set-endtime').addEventListener('click', handleApplyEndTime);
+        $('btn-clear-endtime').addEventListener('click', handleClearEndTime);
+        $('btn-reset').addEventListener('click', handleReset);
+        $('btn-save-current').addEventListener('click', handleSaveCurrent);
+        $('input-text-title').addEventListener('input', e => handleTextTitle(e.target.value));
+        document.querySelectorAll('[data-secondarycolor]').forEach(s => s.addEventListener('click', () => handleSecondaryColor(s.dataset.secondarycolor)));
+
+        // Preset bindings
+        $('btn-save-preset').addEventListener('click', () => {
+            const name = presetNameInput.value.trim();
+            if (!name) { presetNameInput.focus(); return; }
+            savePreset(name);
+            presetNameInput.value = '';
+        });
+        presetNameInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') $('btn-save-preset').click();
+        });
+        presetSelect.addEventListener('change', () => {
+            deletePresetBtn.classList.toggle('hidden', !presetSelect.value);
+        });
+        $('btn-load-preset').addEventListener('click', () => {
+            if (presetSelect.value) loadPreset(presetSelect.value);
+        });
+        $('btn-delete-preset').addEventListener('click', () => {
+            if (presetSelect.value && confirm(`Delete preset "${presetSelect.value}"?`)) {
+                deletePreset(presetSelect.value);
+            }
+        });
+
+        // Auto-hide settings gear
+        document.addEventListener('mousemove', showSettingsBtn);
+        document.addEventListener('mousedown', showSettingsBtn);
+        document.addEventListener('touchstart', showSettingsBtn);
+        document.addEventListener('keydown', showSettingsBtn);
+
+        // ─── Tab visibility ─────────────────────────────────────────────────────
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                // Re-sync timing after tab becomes visible (handles throttling)
+                perfAtInit = performance.now();
+                epochAtInit = Date.now();
+                updateTime();
+            }
+        });
+
+        // ─── popstate ───────────────────────────────────────────────────────────
+        window.addEventListener('popstate', () => {
+            const urlState = parseUrlParams();
+            if (Object.keys(urlState).length > 0) {
+                Object.assign(S, DEFAULTS, urlState);
+            } else {
+                // No URL params — load from localStorage
+                Object.assign(S, { ...DEFAULTS });
+                loadLastIfNoUrl();
+            }
+            applyAll();
+        });
+
+        // ─── localStorage restore ──────────────────────────────────────────────
+        function loadLastIfNoUrl() {
+            if (location.search) return;
+            try {
+                const raw = localStorage.getItem('clock:last');
+                if (!raw) return;
+                const saved = JSON.parse(raw);
+                // Merge but don't override DEFAULTS structure
+                for (const k of Object.keys(DEFAULTS)) {
+                    if (k in saved) S[k] = saved[k];
+                }
+            } catch {}
+        }
+
+        // ─── Init ───────────────────────────────────────────────────────────────
+        // Priority: URL params > localStorage > DEFAULTS
+        const urlState = parseUrlParams();
+        if (Object.keys(urlState).length > 0) {
+            Object.assign(S, DEFAULTS, urlState);
+        } else {
+            loadLastIfNoUrl();
+        }
+
+        populatePresetSelect();
+        applyTheme();
+        applyAll();
+        updateTime();
+        scheduleNextTick();
+
+        // React to system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (S.theme === 'auto') {
+                applyTheme();
+                applySecondaryColor();
+            }
+        });
+
+        // Show settings button on initial load, then fade
+        showSettingsBtn();
+    })();
+    </script>
+</body>
+</html>
