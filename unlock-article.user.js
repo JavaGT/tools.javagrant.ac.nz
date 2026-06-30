@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Article Unlock
 // @namespace    https://tools.javagrant.ac.nz
-// @version      1.0
+// @version      1.1
 // @description  Floating button to access paywalled academic articles via UoA Open Athens proxy or Anna's Archive
 // @author       JavaGT
 // @match        *://*/*
@@ -63,7 +63,7 @@
     return 'https://' + AT_HOST + AT_PATH + '?url=' + encodeURIComponent(url);
   }
 
-  function buildWindow() {
+  function buildWindow(doi) {
     var win = document.createElement('div');
     win.id = WINDOW_ID;
     var s = win.style;
@@ -77,8 +77,6 @@
     s.flexDirection = 'column';
     s.gap = '6px';
     s.alignItems = 'flex-end';
-
-    var doi = findDOI();
 
     var btnUoA = document.createElement('button');
     btnUoA.textContent = '\ud83d\udd12 Unlock via UoA';
@@ -135,26 +133,14 @@
     document.body.appendChild(win);
   }
 
-  function shouldShow() {
-    if (isAcademicUrl(window.location.href)) return true;
-    if (findDOI()) return true;
-
-    var txt = (document.title || '') + ' ' + (document.body ? document.body.innerText.slice(0, 3000) : '');
-    var keywords = ['article', 'paper', 'research', 'journal', 'abstract', 'full text', 'paywall'];
-    for (var i = 0; i < keywords.length; i++) {
-      if (txt.toLowerCase().indexOf(keywords[i]) !== -1) return true;
-    }
-    return false;
-  }
-
   function init() {
-    if (!shouldShow()) return;
+    var doi = findDOI();
+    var academic = isAcademicUrl(window.location.href);
 
     if (GM_registerMenuCommand) {
       GM_registerMenuCommand('Unlock this page via UoA', function() {
         location.href = proxyUrl(location.href);
       });
-      var doi = findDOI();
       if (doi) {
         GM_registerMenuCommand('Search on Anna\'s Archive', function() {
           window.open(ANNAS + '/scidb/' + doi, '_blank');
@@ -162,10 +148,12 @@
       }
     }
 
+    if (!academic && !doi) return;
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', buildWindow);
+      document.addEventListener('DOMContentLoaded', function() { buildWindow(doi); });
     } else {
-      buildWindow();
+      buildWindow(doi);
     }
   }
 
