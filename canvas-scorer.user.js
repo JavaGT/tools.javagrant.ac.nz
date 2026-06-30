@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Canvas SpeedGrader Scorer
 // @namespace    https://tools.javagrant.ac.nz
-// @version      1.4
+// @version      1.5
 // @description  Floating scoring window for Canvas SpeedGrader — track assignment scores across custom variables in localStorage
 // @author       JavaGT
 // @match        https://canvas.auckland.ac.nz/courses/*/gradebook/speed_grader
@@ -265,7 +265,7 @@
   function escapeHtml(s) {
     var d = document.createElement('div');
     d.appendChild(document.createTextNode(s));
-    return d.innerHTML;
+    return d.innerHTML.replace(/"/g, '&quot;');
   }
 
   function findGradeInput() {
@@ -457,7 +457,7 @@
     var titleWrap = document.createElement('div');
     var titleDiv = document.createElement('div');
     titleDiv.style.cssText = 'font-size:14px;font-weight:700;';
-    titleDiv.textContent = 'Scorer v1.4';
+    titleDiv.textContent = 'Scorer v1.5';
     skeleton.subtitle = document.createElement('span');
     skeleton.subtitle.style.cssText = 'font-size:11px;opacity:0.7;font-weight:400;';
     titleWrap.appendChild(titleDiv);
