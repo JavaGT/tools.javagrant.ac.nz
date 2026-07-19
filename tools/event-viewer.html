@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Viewer</title>
+    <title>Event Viewer — tools.javagrant.ac.nz</title>
+    <meta property="og:title" content="Event Viewer — tools.javagrant.ac.nz">
+    <meta property="og:description" content="Live display of mouse, keyboard, touch, scroll, and focus events">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -28,47 +32,8 @@
             }
         }
     </script>
+    <link rel="stylesheet" href="../styles.css">
     <style>
-        :root {
-            --bg: #fafaf9;
-            --bg-card: #ffffff;
-            --text: #1c1917;
-            --text-muted: #78716c;
-            --border: #e7e5e4;
-            --accent: #0f766e;
-            --accent-light: #14b8a6;
-        }
-        .dark {
-            --bg: #1c1917;
-            --bg-card: #292524;
-            --text: #fafaf9;
-            --text-muted: #a8a29e;
-            --border: #44403c;
-            --accent: #14b8a6;
-            --accent-light: #5eead4;
-        }
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border);
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-        .text-muted { color: var(--text-muted); }
-        .text-accent { color: var(--accent); }
-        .text-accent-light { color: var(--accent-light); }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease both;
-        }
-
         .filter-btn {
             transition: all 0.15s ease;
         }
@@ -105,19 +70,80 @@
         #event-table::-webkit-scrollbar { width: 6px; }
         #event-table::-webkit-scrollbar-track { background: transparent; }
         #event-table::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* Zebra striping for table rows */
+        #event-tbody tr:nth-child(even) {
+            background-color: color-mix(in srgb, var(--text) 2%, transparent);
+        }
+        .dark #event-tbody tr:nth-child(even) {
+            background-color: color-mix(in srgb, var(--text) 4%, transparent);
+        }
+
+        /* Paused state */
+        .paused-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background-color: var(--accent);
+            color: #fff;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .paused .paused-overlay {
+            display: block;
+        }
+
+        /* Latest events cards — hide completely when empty */
+        .latest-card.hidden-card {
+            display: none !important;
+        }
+
+        /* Search input */
+        #search-input {
+            width: 160px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+        }
     </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230f766e' width='100' height='100' rx='20'/><text y='.9em' x='50%' text-anchor='middle' font-size='70'>🎯</text></svg>">
 </head>
 <body class="min-h-screen font-sans antialiased">
-    <main class="max-w-4xl mx-auto px-6 py-10">
-        <a href="../index.html" class="inline-flex items-center gap-2 text-muted hover:text-accent text-sm font-medium no-underline mb-6 transition-colors animate-fade-in">
+    <div class="paused-overlay" id="paused-overlay">⏸ Paused — click Resume to continue</div>
+
+    <header class="tools-header" style="position:relative;margin-bottom:-1rem;">
+        <a href="../index.html" class="tools-back-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"/>
                 <polyline points="12 19 5 12 12 5"/>
             </svg>
             Back
         </a>
+        <button id="theme-toggle" class="theme-toggle-btn">
+            <svg id="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+        </button>
+    </header>
 
-        <header class="mb-6 animate-fade-in" style="animation-delay: 0.05s;">
+    <main class="max-w-4xl mx-auto px-6 py-10" style="padding-top:1.5rem;">
+
+        <header class="mb-6 animate-fade-in">
             <h1 class="text-2xl font-bold flex items-center gap-3">
                 <span class="text-accent-light">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -142,7 +168,14 @@
             <button class="filter-btn active rounded-full px-3 py-1 text-xs font-semibold border" data-filter="scroll">Scroll</button>
             <button class="filter-btn active rounded-full px-3 py-1 text-xs font-semibold border" data-filter="focus">Focus</button>
             <div class="ml-auto flex items-center gap-3">
+                <input type="text" id="search-input" class="card rounded-lg px-2 py-1 text-xs text-inherit placeholder:text-[var(--text-muted)] focus:outline-none focus:border-accent transition-colors" placeholder="Search…">
                 <span class="text-muted text-xs" id="event-count">0 events</span>
+                <button id="btn-pause" class="card rounded-lg px-3 py-1 text-xs font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer">
+                    ⏸ Pause
+                </button>
+                <button id="btn-export" class="card rounded-lg px-3 py-1 text-xs font-medium text-muted hover:text-accent hover:border-accent transition-all cursor-pointer">
+                    Export
+                </button>
                 <button onclick="clearLog()" class="card rounded-lg px-3 py-1 text-xs font-medium text-muted hover:text-red-500 hover:border-red-500 transition-all cursor-pointer">
                     Clear
                 </button>
@@ -151,17 +184,17 @@
 
         <!-- Latest events highlight -->
         <div id="latest-events" class="grid grid-cols-3 gap-3 mb-4 animate-fade-in" style="animation-delay: 0.13s;">
-            <div class="card rounded-xl p-4 flex flex-col gap-1">
+            <div class="card rounded-xl p-4 flex flex-col gap-1 latest-card">
                 <span class="text-xs text-muted font-medium">Latest</span>
                 <span id="latest-0-type" class="text-xl font-bold font-mono text-accent-light truncate">—</span>
                 <span id="latest-0-data" class="text-xs text-muted font-mono truncate">—</span>
             </div>
-            <div class="card rounded-xl p-4 flex flex-col gap-1 opacity-70">
+            <div class="card rounded-xl p-4 flex flex-col gap-1 latest-card">
                 <span class="text-xs text-muted font-medium">2nd</span>
                 <span id="latest-1-type" class="text-xl font-bold font-mono text-accent-light truncate">—</span>
                 <span id="latest-1-data" class="text-xs text-muted font-mono truncate">—</span>
             </div>
-            <div class="card rounded-xl p-4 flex flex-col gap-1 opacity-50">
+            <div class="card rounded-xl p-4 flex flex-col gap-1 latest-card">
                 <span class="text-xs text-muted font-medium">3rd</span>
                 <span id="latest-2-type" class="text-xl font-bold font-mono text-accent-light truncate">—</span>
                 <span id="latest-2-data" class="text-xs text-muted font-mono truncate">—</span>
@@ -188,11 +221,20 @@
         </div>
     </main>
 
+    <footer class="tools-footer">
+        <a href="https://javagrant.ac.nz">Built by JavaGrant</a>
+    </footer>
+
+    <script src="../theme.js"></script>
     <script>
         const tbody = document.getElementById('event-tbody');
         const countEl = document.getElementById('event-count');
         const latestEventsEl = document.getElementById('latest-events');
         const emptyStateEl = document.getElementById('empty-state');
+        const searchInput = document.getElementById('search-input');
+        const pauseBtn = document.getElementById('btn-pause');
+        const exportBtn = document.getElementById('btn-export');
+        const pausedOverlay = document.getElementById('paused-overlay');
 
         const EVENT_CATEGORIES = {
             mouse:    ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'],
@@ -200,14 +242,6 @@
             touch:    ['touchstart', 'touchend', 'touchmove'],
             scroll:   ['wheel'],
             focus:    ['focus', 'blur'],
-        };
-
-        const CATEGORY_LABELS = {
-            mouse: 'Mouse',
-            keyboard: 'Keyboard',
-            touch: 'Touch',
-            scroll: 'Scroll',
-            focus: 'Focus',
         };
 
         const activeFilters = {
@@ -221,7 +255,48 @@
         let eventCount = 0;
         const eventBuffer = [];
         let lastMouseMove = 0;
+        let paused = false;
+        let searchQuery = '';
 
+        // --- Pause/Resume ---
+        pauseBtn.addEventListener('click', () => {
+            paused = !paused;
+            document.body.classList.toggle('paused', paused);
+            pauseBtn.textContent = paused ? '▶ Resume' : '⏸ Pause';
+        });
+
+        // --- Export ---
+        exportBtn.addEventListener('click', () => {
+            const filtered = eventBuffer.filter(ev => activeFilters[ev.category]);
+            const json = JSON.stringify(filtered, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            a.href = url;
+            a.download = `events-${ts}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // --- Search ---
+        let searchTimer;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                searchQuery = searchInput.value.toLowerCase().trim();
+                rerenderLog();
+            }, 150);
+        });
+
+        function matchesSearch(ev) {
+            if (!searchQuery) return true;
+            return ev.type.toLowerCase().includes(searchQuery)
+                || ev.data.toLowerCase().includes(searchQuery)
+                || ev.target.toLowerCase().includes(searchQuery);
+        }
+
+        // --- Filter toggling ---
         function toggleAllFilters() {
             const allActive = Object.values(activeFilters).every(Boolean);
             const newState = !allActive;
@@ -238,11 +313,8 @@
                 const filter = btn.dataset.filter;
                 activeFilters[filter] = !activeFilters[filter];
                 btn.classList.toggle('active', activeFilters[filter]);
-
-                // Sync "All" button
                 const allActive = Object.values(activeFilters).every(Boolean);
                 document.getElementById('filter-all').classList.toggle('active', allActive);
-
                 rerenderLog();
             });
         });
@@ -266,28 +338,26 @@
         function rerenderLog() {
             tbody.innerHTML = '';
             let visible = 0;
-            let latestIdx = -1;
 
             for (let i = eventBuffer.length - 1; i >= 0; i--) {
                 const ev = eventBuffer[i];
                 if (!activeFilters[ev.category]) continue;
+                if (!matchesSearch(ev)) continue;
                 visible++;
-                if (latestIdx === -1) latestIdx = i;
             }
 
             countEl.textContent = `${visible} event${visible !== 1 ? 's' : ''}`;
 
             if (visible === 0) {
                 emptyStateEl.classList.remove('hidden');
-                latestEventsEl.classList.add('hidden');
                 return;
             }
             emptyStateEl.classList.add('hidden');
 
-            // Build rows in original order (newest at bottom)
             let rowNum = 1;
             eventBuffer.forEach((ev) => {
                 if (!activeFilters[ev.category]) return;
+                if (!matchesSearch(ev)) return;
                 const row = document.createElement('tr');
                 row.className = 'border-b border-[var(--border)] last:border-0 hover:bg-black/2.5 dark:hover:bg-white/2.5 transition-colors';
                 row.innerHTML = `
@@ -303,12 +373,12 @@
         }
 
         function updateLatestEvent() {
-            // Collect visible events in reverse order (newest first)
             const visibleEvents = [];
             for (let i = eventBuffer.length - 1; i >= 0; i--) {
-                if (activeFilters[eventBuffer[i].category]) {
-                    visibleEvents.push(eventBuffer[i]);
-                }
+                const ev = eventBuffer[i];
+                if (!activeFilters[ev.category]) continue;
+                if (!matchesSearch(ev)) continue;
+                visibleEvents.push(ev);
             }
 
             if (visibleEvents.length === 0) {
@@ -319,17 +389,20 @@
 
             for (let i = 0; i < 3; i++) {
                 const ev = visibleEvents[i];
+                const card = document.getElementById(`latest-${i}-type`).closest('.latest-card');
                 if (ev) {
                     document.getElementById(`latest-${i}-type`).textContent = ev.type;
                     document.getElementById(`latest-${i}-data`).textContent = ev.data || '—';
-                    document.getElementById(`latest-${i}-type`).closest('.card').classList.remove('hidden');
+                    card.classList.remove('hidden-card');
                 } else {
-                    document.getElementById(`latest-${i}-type`).closest('.card').classList.add('hidden');
+                    card.classList.add('hidden-card');
                 }
             }
         }
 
         function logEvent(event) {
+            if (paused) return;
+
             const category = getEventCategory(event.type);
             if (!category) return;
 
@@ -343,15 +416,16 @@
             };
             eventBuffer.push(evData);
 
-            const visible = eventBuffer.filter(e => activeFilters[e.category]).length;
-            countEl.textContent = `${visible} event${visible !== 1 ? 's' : ''}`;
-
-            if (!activeFilters[category]) {
+            if (!activeFilters[category] || (searchQuery && !matchesSearch(evData))) {
+                countEl.textContent = `${eventBuffer.filter(e => activeFilters[e.category]).length} event${eventBuffer.filter(e => activeFilters[e.category]).length !== 1 ? 's' : ''}`;
                 updateLatestEvent();
                 return;
             }
 
             emptyStateEl.classList.add('hidden');
+
+            const visible = eventBuffer.filter(e => activeFilters[e.category] && matchesSearch(e)).length;
+            countEl.textContent = `${visible} event${visible !== 1 ? 's' : ''}`;
 
             const row = document.createElement('tr');
             row.className = 'border-b border-[var(--border)] last:border-0 hover:bg-black/2.5 dark:hover:bg-white/2.5 transition-colors';
@@ -363,7 +437,6 @@
             `;
             tbody.appendChild(row);
 
-            // Auto-scroll to bottom
             tbody.parentElement.parentElement.scrollTop = tbody.parentElement.parentElement.scrollHeight;
 
             updateLatestEvent();
@@ -379,21 +452,22 @@
         }
 
         document.addEventListener('mousemove', (e) => {
+            if (paused) return;
             const now = Date.now();
             if (now - lastMouseMove >= 60) { lastMouseMove = now; logEvent(e); }
         });
         ['mousedown', 'mouseup', 'click', 'dblclick'].forEach(type => {
-            document.addEventListener(type, logEvent);
+            document.addEventListener(type, (e) => { if (!paused) logEvent(e); });
         });
         ['keydown', 'keyup', 'keypress'].forEach(type => {
-            document.addEventListener(type, logEvent);
+            document.addEventListener(type, (e) => { if (!paused) logEvent(e); });
         });
         ['touchstart', 'touchend', 'touchmove'].forEach(type => {
-            document.addEventListener(type, logEvent);
+            document.addEventListener(type, (e) => { if (!paused) logEvent(e); });
         });
-        document.addEventListener('wheel', logEvent, { passive: true });
+        document.addEventListener('wheel', (e) => { if (!paused) logEvent(e); }, { passive: true });
         ['focus', 'blur'].forEach(type => {
-            document.addEventListener(type, logEvent);
+            document.addEventListener(type, (e) => { if (!paused) logEvent(e); });
         });
     </script>
 </body>

@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clock — tools.javagrant.ac.nz</title>
+    <meta property="og:title" content="Clock — tools.javagrant.ac.nz">
+    <meta property="og:description" content="Customisable clock with countdown timer, multiple themes, fonts, and colours">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
@@ -234,6 +238,7 @@
             font-weight: 600;
         }
     </style>
+    <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230f766e' width='100' height='100' rx='20'/><text y='.9em' x='50%' text-anchor='middle' font-size='70'>⏱</text></svg>">
 </head>
 <body class="min-h-screen font-sans antialiased">
@@ -1196,7 +1201,19 @@
 
         // Show settings button on initial load, then fade
         showSettingsBtn();
+
+        // Close settings modal on backdrop click
+        const settingsCard = document.getElementById('settings-card');
+        if (settingsCard) {
+            modal.addEventListener('click', (e) => {
+                if (!settingsCard.contains(e.target)) closeSettings();
+            });
+        }
     })();
     </script>
+
+    <footer class="tools-footer" style="position:fixed;bottom:0;left:0;right:0;z-index:5;">
+        <a href="https://javagrant.ac.nz">Built by JavaGrant</a>
+    </footer>
 </body>
 </html>
