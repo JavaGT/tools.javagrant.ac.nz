@@ -65,8 +65,8 @@ For `clock.html` and `tools/event-viewer.html`: thin top bar with `← Back` lin
 ### 2.3 Add favicon to Event Viewer
 Copy the inline SVG favicon pattern from `index.html`.
 
-### 2.4 Add footer with attribution
-Slim `<footer>` on all 3 pages: `Built by JavaGrant` with link. Centered, `text-muted`, `text-xs`.
+### 2.4 Footer
+Footer stays on the landing page only (`index.html`): `Built by JavaGrant` with link, centered, `text-muted`, `text-xs`. Tool pages (`clock.html`, `tools/event-viewer.html`, `tools/comms-208-test-1-2026.html`) have no footer — full-screen displays stay clean.
 
 ### 2.5 Add Open Graph / Twitter meta tags
 `og:title`, `og:description`, `og:image`, `twitter:card` on all 3 pages.
