@@ -39,7 +39,8 @@
             inset: 0;
             display: flex;
             flex-direction: column;
-            padding: 5.5rem 1.5rem 5.5rem;
+            box-sizing: border-box;
+            padding: 4rem 1.5rem;
             overflow-y: auto;
             opacity: 0;
             visibility: hidden;
@@ -253,38 +254,44 @@
                 <div id="clock-date" class="text-xs text-muted mt-1"></div>
             </div>
             <div class="slide-inner max-w-6xl mx-auto">
-                <p class="eyebrow mb-3">COMMS 208 &bull; Test #2 &bull; 2026</p>
-                <h2 class="font-bold tracking-tight mb-6" style="font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.05;">Course Readings</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
-                <ol class="space-y-2 list-none p-0 m-0">
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">1</span><span class="text-sm md:text-base leading-snug">AI Essentials Canvas Course (UoA)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">2</span><span class="text-sm md:text-base leading-snug">Anatomy of an AI System (Crawford &amp; Joler)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">3</span><span class="text-sm md:text-base leading-snug">Benefits of AI in healthcare for Aotearoa NZ: Summary (PMCSA)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">4</span><span class="text-sm md:text-base leading-snug">Physiognomy&rsquo;s New Clothes (Ag&uuml;era y Arcas, et al.)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">5</span><span class="text-sm md:text-base leading-snug">AI Ethics: Seven Traps (Zimmermann &amp; Zevenbergen)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">6</span><span class="text-sm md:text-base leading-snug">Principles of M&amacr;ori Data Sovereignty (Te Mana Raraunga)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">7</span><span class="text-sm md:text-base leading-snug">Data Feminism: The Power Chapter (D&rsquo;Ignazio &amp; Klein)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">8</span><span class="text-sm md:text-base leading-snug">Ethics &amp; Info. Technology (Johnson &amp; Miller)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">9</span><span class="text-sm md:text-base leading-snug">Plagiarism and Copyright Infringement (Murray)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">10</span><span class="text-sm md:text-base leading-snug">IP and Confucianism (Yu)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">11</span><span class="text-sm md:text-base leading-snug">Milestones in the History of Info. and Computer Ethics (Bynum)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">12</span><span class="text-sm md:text-base leading-snug">A Moral Panic: ChatGPT and the Gamification of Education (Kennedy)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">13</span><span class="text-sm md:text-base leading-snug">Contra Literacy-Laundering: Mechanistic Critical AI Literacy (Ray &amp; Guest)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">14</span><span class="text-sm md:text-base leading-snug">Contestation of Tech Ethics (Green)</span></li>
-                </ol>
-                <ol class="space-y-2 list-none p-0 m-0">
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">1</span><span class="text-sm md:text-base leading-snug">Political Effects of the Internet and Social Media</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">2</span><span class="text-sm md:text-base leading-snug">Algorithmic Decision-Making And Accountability Case Study (Kirchner / Stanford U.)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">3</span><span class="text-sm md:text-base leading-snug">AI making benefit decisions &mdash; experts raise alarm over rushed law (Keall)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">4</span><span class="text-sm md:text-base leading-snug">Bigger Brother (Tim Wu review of Zuboff)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">5</span><span class="text-sm md:text-base leading-snug">The Coup We Are Not Talking About (Zuboff / NYT)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">6</span><span class="text-sm md:text-base leading-snug">Will AI Take My Job? With Karen Hao (Video Podcast)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">7</span><span class="text-sm md:text-base leading-snug">Deepfakes and Democracy (Claire Benn)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">8</span><span class="text-sm md:text-base leading-snug">The Algorithmic Colonization of Africa (Chapter 16) (Abeba Birhane)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">9</span><span class="text-sm md:text-base leading-snug">Yellow Techno-Peril: The &ldquo;Clash of Civilizations&rdquo; and Anti-Chinese Racial Rhetoric in the US-China AI Arms Race (Kerry McInerney)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">10</span><span class="text-sm md:text-base leading-snug">AI is trash (Anne Pasek)</span></li>
-                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">11</span><span class="text-sm md:text-base leading-snug">A New AI Lexicon: Maintenance (Anna Pendergrast and Kelly Pendergrast)</span></li>
-                </ol>
+                <p class="eyebrow mb-2">COMMS 208 &bull; Test #2 &bull; 2026</p>
+                <h2 class="font-bold tracking-tight mb-4" style="font-size: clamp(1.75rem, 4vw, 2.75rem); line-height: 1.05;">Course Readings</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                    <div>
+                        <h3 class="text-sm font-semibold text-muted mb-2">Test 1 readings</h3>
+                        <ol class="space-y-1 list-none p-0 m-0">
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">1</span><span class="text-xs md:text-sm leading-snug">AI Essentials Canvas Course (UoA)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">2</span><span class="text-xs md:text-sm leading-snug">Anatomy of an AI System (Crawford &amp; Joler)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">3</span><span class="text-xs md:text-sm leading-snug">Benefits of AI in healthcare for Aotearoa NZ: Summary (PMCSA)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">4</span><span class="text-xs md:text-sm leading-snug">Physiognomy&rsquo;s New Clothes (Ag&uuml;era y Arcas, et al.)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">5</span><span class="text-xs md:text-sm leading-snug">AI Ethics: Seven Traps (Zimmermann &amp; Zevenbergen)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">6</span><span class="text-xs md:text-sm leading-snug">Principles of M&amacr;ori Data Sovereignty (Te Mana Raraunga)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">7</span><span class="text-xs md:text-sm leading-snug">Data Feminism: The Power Chapter (D&rsquo;Ignazio &amp; Klein)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">8</span><span class="text-xs md:text-sm leading-snug">Ethics &amp; Info. Technology (Johnson &amp; Miller)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">9</span><span class="text-xs md:text-sm leading-snug">Plagiarism and Copyright Infringement (Murray)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">10</span><span class="text-xs md:text-sm leading-snug">IP and Confucianism (Yu)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">11</span><span class="text-xs md:text-sm leading-snug">Milestones in the History of Info. and Computer Ethics (Bynum)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">12</span><span class="text-xs md:text-sm leading-snug">A Moral Panic: ChatGPT and the Gamification of Education (Kennedy)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">13</span><span class="text-xs md:text-sm leading-snug">Contra Literacy-Laundering: Mechanistic Critical AI Literacy (Ray &amp; Guest)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">14</span><span class="text-xs md:text-sm leading-snug">Contestation of Tech Ethics (Green)</span></li>
+                        </ol>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-muted mb-2">Test 2 readings</h3>
+                        <ol class="space-y-1 list-none p-0 m-0">
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">1</span><span class="text-xs md:text-sm leading-snug">Political Effects of the Internet and Social Media</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">2</span><span class="text-xs md:text-sm leading-snug">Algorithmic Decision-Making And Accountability Case Study (Kirchner / Stanford U.)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">3</span><span class="text-xs md:text-sm leading-snug">AI making benefit decisions &mdash; experts raise alarm over rushed law (Keall)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">4</span><span class="text-xs md:text-sm leading-snug">Bigger Brother (Tim Wu review of Zuboff)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">5</span><span class="text-xs md:text-sm leading-snug">The Coup We Are Not Talking About (Zuboff / NYT)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">6</span><span class="text-xs md:text-sm leading-snug">Will AI Take My Job? With Karen Hao (Video Podcast)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">7</span><span class="text-xs md:text-sm leading-snug">Deepfakes and Democracy (Claire Benn)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">8</span><span class="text-xs md:text-sm leading-snug">The Algorithmic Colonization of Africa (Chapter 16) (Abeba Birhane)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">9</span><span class="text-xs md:text-sm leading-snug">Yellow Techno-Peril: The &ldquo;Clash of Civilizations&rdquo; and Anti-Chinese Racial Rhetoric in the US-China AI Arms Race (Kerry McInerney)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">10</span><span class="text-xs md:text-sm leading-snug">AI is trash (Anne Pasek)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">11</span><span class="text-xs md:text-sm leading-snug">A New AI Lexicon: Maintenance (Anna Pendergrast and Kelly Pendergrast)</span></li>
+                        </ol>
+                    </div>
                 </div>
             </div>
         </section>
