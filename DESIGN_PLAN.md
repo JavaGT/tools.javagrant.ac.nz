@@ -66,7 +66,7 @@ For `clock.html` and `tools/event-viewer.html`: thin top bar with `← Back` lin
 Copy the inline SVG favicon pattern from `index.html`.
 
 ### 2.4 Footer
-Footer stays on the landing page only (`index.html`): `Built by JavaGrant` with link, centered, `text-muted`, `text-xs`. Tool pages (`clock.html`, `tools/event-viewer.html`, `tools/comms-208-test-1-2026.html`) have no footer — full-screen displays stay clean.
+Footer stays on the landing page only (`index.html`): `Built by JavaGrant` with link, centered, `text-muted`, `text-xs`. Tool pages (`clock.html`, `tools/event-viewer.html`, `tools/comms-208-test-1-2026.html`, and `tools/comms-208-test-2-2026.html`) have no footer — full-screen displays stay clean.
 
 ### 2.5 Add Open Graph / Twitter meta tags
 `og:title`, `og:description`, `og:image`, `twitter:card` on all 3 pages.
@@ -105,3 +105,7 @@ Zebra striping using `color-mix()` for automatic dark mode support.
 | 4.2 | Add `Ctrl+K` / `Cmd+K` keyboard shortcut to focus Event Viewer search |
 | 4.3 | Add `prefers-reduced-motion` media query to landing page |
 | 4.4 | Add `forced-colors` media query support to event-viewer |
+
+## Comms course pages
+
+Comms course tools are grouped in a dedicated **Comms Courses** section on the homepage, separate from general display tools. Each course page remains a standalone static HTML slide deck under `tools/` and follows the Test #1 slide navigation, theme, and fullscreen patterns. Test #2 includes a compact reference list of Test #1 readings and a main slide with the supplied Test #2 reading list.
