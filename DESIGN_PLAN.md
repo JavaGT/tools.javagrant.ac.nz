@@ -109,3 +109,5 @@ Zebra striping using `color-mix()` for automatic dark mode support.
 ## Comms course pages
 
 Comms course tools are grouped in a dedicated **Comms Courses** section on the homepage, separate from general display tools. Each course page remains a standalone static HTML slide deck under `tools/` and follows the Test #1 slide navigation, theme, and fullscreen patterns. Test #2 includes a compact reference list of Test #1 readings and a main slide with the supplied Test #2 reading list.
+
+Test #2 slide layout follows the Test #1 slideshow: slide 1 repeats its test-day instructions; slide 2 presents two unheaded reading lists side by side, with the Test #1 readings first and the new Test #2 readings second.

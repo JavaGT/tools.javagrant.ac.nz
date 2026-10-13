@@ -12,8 +12,19 @@ class CommsCoursePagesTest(unittest.TestCase):
         self.assertIn("tools/comms-208-test-1-2026.html", homepage)
         self.assertIn("tools/comms-208-test-2-2026.html", homepage)
 
-    def test_test_two_contains_both_reading_sets(self):
+    def test_test_two_reuses_test_one_instructions_on_first_slide(self):
         page = unescape((ROOT / "tools/comms-208-test-2-2026.html").read_text())
+        first_slide = page.split('id="slide-2"', 1)[0]
+        self.assertIn("Test Day!!", first_slide)
+        self.assertIn("All phones / devices", first_slide)
+        self.assertIn("leave your bag at the front of the class", first_slide)
+        self.assertIn("Handwritten notes", first_slide)
+        self.assertIn("Optional:", first_slide)
+
+    def test_second_slide_has_two_unheaded_reading_lists(self):
+        page = unescape((ROOT / "tools/comms-208-test-2-2026.html").read_text())
+        second_slide = page.split('id="slide-2"', 1)[1].split("</section>", 1)[0]
+        self.assertEqual(second_slide.count("<ol"), 2)
         for title in (
             "AI Essentials Canvas Course", "Anatomy of an AI System",
             "Benefits of AI in healthcare for Aotearoa NZ", "Physiognomy’s New Clothes",
@@ -32,7 +43,8 @@ class CommsCoursePagesTest(unittest.TestCase):
             "AI is trash", "A New AI Lexicon: Maintenance",
         ):
             with self.subTest(title=title):
-                self.assertIn(title, page)
+                self.assertIn(title, second_slide)
+        self.assertNotIn("<h3", second_slide)
 
 
 if __name__ == "__main__":

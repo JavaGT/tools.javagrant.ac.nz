@@ -186,13 +186,77 @@
 
     <main class="fixed inset-0 overflow-hidden">
 
-        <!-- ── Slide 1: Test 1 reading recap ─────────────────────────── -->
-        <section class="slide active" id="slide-1" role="region" aria-label="Slide 1: Test 1 reading recap" aria-hidden="false">
+        <!-- ── Slide 1: Test Day instructions ───────────────────────────── -->
+        <section class="slide active" id="slide-1" role="region" aria-label="Slide 1: Test day instructions" aria-hidden="false">
             <div class="slide-inner max-w-5xl mx-auto">
                 <p class="eyebrow mb-3">COMMS 208 &bull; Test #2 &bull; 2026</p>
-                <h1 class="font-bold tracking-tight mb-3" style="font-size: clamp(2rem, 6vw, 4rem); line-height: 1.05;">Test 1 Readings</h1>
-                <p class="text-muted text-sm md:text-base mb-5">Quick recap of the readings from the first test.</p>
-                <ol class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 list-none p-0 m-0">
+                <h1 class="font-bold tracking-tight mb-6 md:mb-10" style="font-size: clamp(2.25rem, 8vw, 6rem); line-height: 1.02;">Test Day!!</h1>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">
+
+                    <div class="card rounded-2xl p-4 md:p-9">
+                        <h2 class="text-lg font-bold mb-4 md:mb-6 flex items-center gap-3">
+                            <span class="w-1.5 h-6 rounded-full" style="background-color: var(--accent);" aria-hidden="true"></span>
+                            PLEASE
+                        </h2>
+                        <ul class="space-y-4 md:space-y-6">
+                            <li class="step">
+                                <span class="step-marker" aria-hidden="true">&bull;</span>
+                                <span class="text-base md:text-xl leading-snug">All phones / devices <strong>OFF</strong> and stored in your bag</span>
+                            </li>
+                            <li class="step">
+                                <span class="step-arrow text-3xl" aria-hidden="true">&#10132;</span>
+                                <span class="text-base md:text-xl leading-snug">Then &mdash; leave your bag at the front of the class</span>
+                            </li>
+                            <li class="step">
+                                <span class="step-arrow text-3xl" aria-hidden="true">&#10132;</span>
+                                <span class="text-base md:text-xl leading-snug">Then &mdash; each student may take <strong>ONE</strong> test</span>
+                            </li>
+                            <li class="step">
+                                <span class="step-marker" aria-hidden="true">&bull;</span>
+                                <span class="text-base md:text-xl leading-snug">Do <strong>NOT</strong> open test until instructed to do so</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="card rounded-2xl p-4 md:p-9">
+                        <h2 class="text-lg font-bold mb-4 md:mb-6 flex items-center gap-3">
+                            <span class="w-1.5 h-6 rounded-full" style="background-color: var(--accent);" aria-hidden="true"></span>
+                            You may have with you:
+                        </h2>
+                        <ul class="space-y-4 md:space-y-6">
+                            <li class="step">
+                                <span class="step-marker" aria-hidden="true">&#10003;</span>
+                                <span class="text-base md:text-xl leading-snug">Handwritten notes covering <strong>ONE</strong> sheet of standard (A4) printer paper</span>
+                            </li>
+                            <li class="step">
+                                <span class="step-marker" aria-hidden="true">&#10003;</span>
+                                <span class="text-base md:text-xl leading-snug">Pencils / Pens</span>
+                            </li>
+                            <li class="step">
+                                <span class="step-marker" aria-hidden="true">&#10003;</span>
+                                <span class="text-base md:text-xl leading-snug"><strong>Optional:</strong> Printed dictionary</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ── Slide 2: Test 2 readings + live clock ─────────────────── -->
+        <section class="slide" id="slide-2" role="region" aria-label="Slide 2: Test 2 course readings and clock" aria-hidden="true">
+            <div id="clock-widget" class="card rounded-2xl px-5 py-3 text-right" aria-hidden="true">
+                <div class="text-[0.65rem] uppercase tracking-widest text-muted font-semibold mb-1">Time</div>
+                <div id="clock-time" class="text-2xl md:text-3xl font-light leading-none text-accent">--:--:--</div>
+                <div id="clock-date" class="text-xs text-muted mt-1"></div>
+            </div>
+            <div class="slide-inner max-w-6xl mx-auto">
+                <p class="eyebrow mb-3">COMMS 208 &bull; Test #2 &bull; 2026</p>
+                <h2 class="font-bold tracking-tight mb-6" style="font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.05;">Course Readings</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
+                <ol class="space-y-2 list-none p-0 m-0">
                     <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">1</span><span class="text-sm md:text-base leading-snug">AI Essentials Canvas Course (UoA)</span></li>
                     <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">2</span><span class="text-sm md:text-base leading-snug">Anatomy of an AI System (Crawford &amp; Joler)</span></li>
                     <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">3</span><span class="text-sm md:text-base leading-snug">Benefits of AI in healthcare for Aotearoa NZ: Summary (PMCSA)</span></li>
@@ -208,45 +272,19 @@
                     <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">13</span><span class="text-sm md:text-base leading-snug">Contra Literacy-Laundering: Mechanistic Critical AI Literacy (Ray &amp; Guest)</span></li>
                     <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">14</span><span class="text-sm md:text-base leading-snug">Contestation of Tech Ethics (Green)</span></li>
                 </ol>
-            </div>
-        </section>
-
-        <!-- ── Slide 2: Test 2 readings + live clock ─────────────────── -->
-        <section class="slide" id="slide-2" role="region" aria-label="Slide 2: Test 2 course readings and clock" aria-hidden="true">
-            <div id="clock-widget" class="card rounded-2xl px-5 py-3 text-right" aria-hidden="true">
-                <div class="text-[0.65rem] uppercase tracking-widest text-muted font-semibold mb-1">Time</div>
-                <div id="clock-time" class="text-2xl md:text-3xl font-light leading-none text-accent">--:--:--</div>
-                <div id="clock-date" class="text-xs text-muted mt-1"></div>
-            </div>
-            <div class="slide-inner max-w-6xl mx-auto">
-                <p class="eyebrow mb-2">COMMS 208 &bull; Test #2 &bull; 2026</p>
-                <h2 class="font-bold tracking-tight mb-4" style="font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.05;">Course Readings</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5">
-                    <section>
-                        <h3 class="text-base md:text-lg font-bold mb-2">Before Monday&rsquo;s lecture</h3>
-                        <ol class="list-decimal pl-5 space-y-1 text-sm md:text-base leading-snug"><li>Political Effects of the Internet and Social Media</li><li>Algorithmic Decision-Making And Accountability Case Study (Kirchner / Stanford U.)</li></ol>
-                    </section>
-                    <section>
-                        <h3 class="text-base md:text-lg font-bold mb-2">Before lecture #8: algorithmic governance and datafied control</h3>
-                        <ol class="list-decimal pl-5 space-y-1 text-sm md:text-base leading-snug"><li>AI making benefit decisions &mdash; experts raise alarm over rushed law (Keall)</li><li>Bigger Brother (Tim Wu review of Zuboff&rsquo;s <em>Surveillance Capitalism</em>)</li><li>The Coup We Are Not Talking About (Zuboff / NYT)</li></ol>
-                        <p class="text-xs md:text-sm text-muted mt-2">Consider how these readings might help explain events in Aotearoa NZ, such as the 2022 antivax protest encampment in Wellington.</p>
-                    </section>
-                    <section>
-                        <h3 class="text-base md:text-lg font-bold mb-2">Framing piece for the next two lectures</h3>
-                        <ol class="list-decimal pl-5 space-y-1 text-sm md:text-base leading-snug"><li>Will AI Take My Job? With Karen Hao (video podcast)</li></ol>
-                    </section>
-                    <section>
-                        <h3 class="text-base md:text-lg font-bold mb-2">Democracy</h3>
-                        <ol class="list-decimal pl-5 space-y-1 text-sm md:text-base leading-snug"><li>Deepfakes and Democracy (Claire Benn)</li></ol>
-                    </section>
-                    <section>
-                        <h3 class="text-base md:text-lg font-bold mb-2">AI and colonialism</h3>
-                        <ol class="list-decimal pl-5 space-y-1 text-sm md:text-base leading-snug"><li>The Algorithmic Colonization of Africa (Chapter 16) (Abeba Birhane)</li><li>Yellow Techno-Peril: The &ldquo;Clash of Civilizations&rdquo; and Anti-Chinese Racial Rhetoric in the US-China AI Arms Race (Kerry McInerney)</li></ol>
-                    </section>
-                    <section class="md:col-span-2">
-                        <h3 class="text-base md:text-lg font-bold mb-2">AI and the environment</h3>
-                        <ol class="list-decimal pl-5 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-sm md:text-base leading-snug"><li>AI is trash (Anne Pasek)</li><li>A New AI Lexicon: Maintenance (Anna Pendergrast and Kelly Pendergrast)</li></ol>
-                    </section>
+                <ol class="space-y-2 list-none p-0 m-0">
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">1</span><span class="text-sm md:text-base leading-snug">Political Effects of the Internet and Social Media</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">2</span><span class="text-sm md:text-base leading-snug">Algorithmic Decision-Making And Accountability Case Study (Kirchner / Stanford U.)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">3</span><span class="text-sm md:text-base leading-snug">AI making benefit decisions &mdash; experts raise alarm over rushed law (Keall)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">4</span><span class="text-sm md:text-base leading-snug">Bigger Brother (Tim Wu review of Zuboff)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">5</span><span class="text-sm md:text-base leading-snug">The Coup We Are Not Talking About (Zuboff / NYT)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">6</span><span class="text-sm md:text-base leading-snug">Will AI Take My Job? With Karen Hao (Video Podcast)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">7</span><span class="text-sm md:text-base leading-snug">Deepfakes and Democracy (Claire Benn)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">8</span><span class="text-sm md:text-base leading-snug">The Algorithmic Colonization of Africa (Chapter 16) (Abeba Birhane)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">9</span><span class="text-sm md:text-base leading-snug">Yellow Techno-Peril: The &ldquo;Clash of Civilizations&rdquo; and Anti-Chinese Racial Rhetoric in the US-China AI Arms Race (Kerry McInerney)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">10</span><span class="text-sm md:text-base leading-snug">AI is trash (Anne Pasek)</span></li>
+                    <li class="flex items-start gap-2"><span class="read-num" aria-hidden="true">11</span><span class="text-sm md:text-base leading-snug">A New AI Lexicon: Maintenance (Anna Pendergrast and Kelly Pendergrast)</span></li>
+                </ol>
                 </div>
             </div>
         </section>
