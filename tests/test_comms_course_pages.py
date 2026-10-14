@@ -20,6 +20,9 @@ class CommsCoursePagesTest(unittest.TestCase):
         self.assertIn("leave your bag at the front of the class", first_slide)
         self.assertIn("Handwritten notes", first_slide)
         self.assertIn("Optional:", first_slide)
+        page = (ROOT / "tools/comms-208-test-2-2026.html").read_text()
+        for style in (".step {", ".step-marker {", ".step-arrow {"):
+            self.assertIn(style, page)
 
     def test_second_slide_has_two_unheaded_reading_lists(self):
         page = unescape((ROOT / "tools/comms-208-test-2-2026.html").read_text())

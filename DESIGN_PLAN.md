@@ -115,3 +115,5 @@ Test #2 slide layout follows the Test #1 slideshow: slide 1 repeats its test-day
 The Test #2 reading slide gives each list a small title and keeps both lists visible in the viewport without scrolling.
 
 The two Test #2 reading list titles are **First half readings** and **Second half readings**.
+
+Test #2 slide 1 retains the Test #1 marker styling: circular badges for bullets and checks, and teal arrows for the sequence steps.
