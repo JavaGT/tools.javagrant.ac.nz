@@ -113,3 +113,5 @@ Comms course tools are grouped in a dedicated **Comms Courses** section on the h
 Test #2 slide layout follows the Test #1 slideshow: slide 1 repeats its test-day instructions; slide 2 presents two unheaded reading lists side by side, with the Test #1 readings first and the new Test #2 readings second.
 
 The Test #2 reading slide gives each list a small title and keeps both lists visible in the viewport without scrolling.
+
+The two Test #2 reading list titles are **First half readings** and **Second half readings**.

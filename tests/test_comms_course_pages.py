@@ -25,8 +25,8 @@ class CommsCoursePagesTest(unittest.TestCase):
         page = unescape((ROOT / "tools/comms-208-test-2-2026.html").read_text())
         second_slide = page.split('id="slide-2"', 1)[1].split("</section>", 1)[0]
         self.assertEqual(second_slide.count("<ol"), 2)
-        self.assertIn("Test 1 readings", second_slide)
-        self.assertIn("Test 2 readings", second_slide)
+        self.assertIn("First half readings", second_slide)
+        self.assertIn("Second half readings", second_slide)
         for title in (
             "AI Essentials Canvas Course", "Anatomy of an AI System",
             "Benefits of AI in healthcare for Aotearoa NZ", "Physiognomy’s New Clothes",
