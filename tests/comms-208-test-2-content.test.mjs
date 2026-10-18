@@ -19,17 +19,20 @@ function decodeHtml(value) {
         .replace(/&#x([\da-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)));
 }
 
-function listItems(sectionId) {
+function readingLists(sectionId) {
     const section = html.match(new RegExp(`<section[^>]*id="${sectionId}"[\\s\\S]*?<\\/section>`))?.[0];
     assert.ok(section, `missing ${sectionId}`);
-    return [...section.matchAll(/<li class="flex items-start gap-2"><span class="read-num"[^>]*>(\d+)<\/span><span class="text-xs md:text-sm leading-snug">([\s\S]*?)<\/span><\/li>/g)]
-        .map(([, number, title]) => [Number(number), decodeHtml(title.replace(/<[^>]+>/g, '')).trim()]);
+    return [...section.matchAll(/<div>\s*<h3[^>]*>([\s\S]*?)<\/h3>\s*<ol([^>]*)>([\s\S]*?)<\/ol>\s*<\/div>/g)]
+        .map(([, title, attributes, list]) => ({
+            title: decodeHtml(title.replace(/<[^>]+>/g, '')).trim(),
+            start: Number(attributes.match(/\bstart="(\d+)"/)?.[1] ?? 1),
+            items: [...list.matchAll(/<li class="flex items-start gap-2"><span class="read-num"[^>]*>(\d+)<\/span><span class="text-xs md:text-sm leading-snug">([\s\S]*?)<\/span><\/li>/g)]
+                .map(([, number, name]) => [Number(number), decodeHtml(name.replace(/<[^>]+>/g, '')).trim()]),
+        }));
 }
 
-test('Test 2 reading slide matches the 2026 PDF lists and numbering', () => {
-    assert.match(html, /Old Reading List \(Weeks 1-5\)/);
-    assert.match(html, /New Reading List \(Weeks 7-11\)/);
-    assert.deepEqual(listItems('slide-2'), [
+test('Test 2 reading slide matches the PDF wording, order, and numbering', () => {
+    const expected = [
         [1, 'AI Essentials Canvas Course (UoA)'],
         [2, 'Anatomy of an AI System (Crawford & Joler)'],
         [3, 'Benefits of AI in healthcare for Aotearoa NZ: Summary (PMCSA)'],
@@ -55,5 +58,18 @@ test('Test 2 reading slide matches the 2026 PDF lists and numbering', () => {
         [23, 'Yellow Techno-Peril: The \'Clash of Civilizations\' and Anti-Chinese Racial Rhetoric in the US-China AI Arms Race (Kerry McInerney)'],
         [24, 'AI is trash (Anne Pasek)'],
         [25, 'A New AI Lexicon: Maintenance (Anna Pendergrast and Kelly Pendergrast)'],
+    ];
+    assert.deepEqual(readingLists('slide-2'), [
+        { title: 'New Reading List (Weeks 7-11)', start: 15, items: expected.slice(14) },
+        { title: 'Old Reading List (Weeks 1-5)', start: 1, items: expected.slice(0, 14) },
     ]);
+});
+
+test('Test 2 instructions match the PDF wording', () => {
+    const section = html.match(/<section[^>]*id="slide-1"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(section, 'missing slide-1');
+    const text = decodeHtml(section.replace(/<[^>]+>/g, '').replace(/\s+/g, ' '));
+    assert.ok(text.includes('PLEASE:'), 'PLEASE heading needs the PDF colon');
+    assert.ok(text.includes('Then➜ Leave your bag at the front of the class'));
+    assert.ok(text.includes('Then➜ Each student may take ONE test'));
 });

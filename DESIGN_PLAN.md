@@ -108,11 +108,11 @@ Zebra striping using `color-mix()` for automatic dark mode support.
 
 ## Comms course pages
 
-Comms course tools are grouped in a dedicated **Comms Courses** section on the homepage, separate from general display tools. Each course page remains a standalone static HTML slide deck under `tools/` and follows the Test #1 slide navigation, theme, and fullscreen patterns. Test #2 includes a compact reference list of Test #1 readings and a main slide with the supplied Test #2 reading list. Its displayed reading slide follows the 2026 PDF: **Old Reading List (Weeks 1-5)** contains items 1-14, and **New Reading List (Weeks 7-11)** continues with items 15-25.
+Comms course tools are grouped in a dedicated **Comms Courses** section on the homepage, separate from general display tools. Each course page remains a standalone static HTML slide deck under `tools/` and follows the Test #1 slide navigation, theme, and fullscreen patterns. Test #2 includes a compact reference list of Test #1 readings and a main slide with the supplied Test #2 reading list. Its displayed reading slide follows the 2026 PDF: **New Reading List (Weeks 7-11)** contains items 15-25 in the left column, and **Old Reading List (Weeks 1-5)** contains items 1-14 in the right column.
 
-Test #2 slide layout follows the Test #1 slideshow: slide 1 repeats its test-day instructions; slide 2 presents the old and new reading lists side by side, with the old list first and the new list second.
+Test #2 slide layout follows the Test #1 slideshow: slide 1 repeats its test-day instructions; slide 2 presents the new reading list on the left and the old reading list on the right, matching the source PDF.
 
-The Test #2 reading slide gives each list a small title and keeps the two columns visible together, with scrolling available on shorter viewports.
+The Test #2 reading slide gives each list a small title and keeps the two columns visible together, with scrolling available on shorter viewports. Use ordered-list semantics and start the new list at 15 so its visual and assistive numbering agree.
 
 The two Test #2 reading list titles are **Old Reading List (Weeks 1-5)** and **New Reading List (Weeks 7-11)**. Preserve the PDF's item numbering and reading titles, including author or source attributions.
 
